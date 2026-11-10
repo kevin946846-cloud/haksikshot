@@ -417,7 +417,7 @@ let sample=null,aiImages=false;
   if(sample){const l=await sample.limits().catch(()=>null);aiImages=!!(l&&l.images)}})();
 async function aiCheckFood(file, m) {
   const src = await shrink(file);
-  const { data, error } = await sb.functions.invoke("verify-photo", {
+  const { data, error } = await sb.functions.invoke("gemini-3.8-flash", {
     body: { type: "food", imageBase64: src, menu: m }
   });
   if (error || !data) return { skipped: true };
@@ -426,7 +426,7 @@ async function aiCheckFood(file, m) {
 
 async function aiCheckSold(file, m) {
   const src = await shrink(file);
-  const { data, error } = await sb.functions.invoke("verify-photo", {
+  const { data, error } = await sb.functions.invoke("gemini-3.8-flash", {
     body: { type: "sold", imageBase64: src, menu: m }
   });
   if (error || !data) return { skipped: true };
