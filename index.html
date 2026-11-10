@@ -415,17 +415,22 @@ function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeou
 let sample=null,aiImages=false;
 (async()=>{try{sample=await window.claude?.use?.("sample")}catch(e){}
   if(sample){const l=await sample.limits().catch(()=>null);aiImages=!!(l&&l.images)}})();
-async function aiCheckFood(file,m){
-  if(!sample||!aiImages)return {skipped:true};
-  return await sample.json(`학식 메뉴 사진 검증 작업이야. 메뉴 이름: "${m.name}" (분류: ${m.cat}).
-1) 사진이 이 메뉴의 실제 음식 사진인지 판단해. 음식이 아니거나, 누가 봐도 다른 메뉴(예: 떡볶이 메뉴에 라면 사진)거나, 부적절한 사진이면 match=false. 같은 계열의 음식이면 match=true.
-2) match=true면 사진에 보이는 1인분 양을 기준으로 영양성분을 추정해. 메뉴 이름 기준 기본 추정치는 ${m.n.kcal}kcal, 단백질 ${m.n.protein}g, 탄수화물 ${m.n.carbs}g, 당 ${m.n.sugar}g 이야.
-JSON만 답해: {"match":true,"reason":"한국어 한 문장","portion":"적음|보통|많음","nutrition":{"kcal":0,"protein":0,"carbs":0,"sugar":0}}`,{images:[file]});
+async function aiCheckFood(file, m) {
+  const src = await shrink(file);
+  const { data, error } = await sb.functions.invoke("verify-photo", {
+    body: { type: "food", imageBase64: src, menu: m }
+  });
+  if (error || !data) return { skipped: true };
+  return data;
 }
-async function aiCheckSold(file,m){
-  if(!sample||!aiImages)return {skipped:true};
-  return await sample.json(`학식 품절 제보 검증 작업이야. 사진이 식당 키오스크나 메뉴판이고, 그 안에 "${m.name}" 메뉴가 품절로 표시되어 있는지 판단해. 메뉴 이름과 품절 표시가 함께 보이면 ok=true, 다른 메뉴만 품절이거나 판단할 수 없으면 ok=false.
-JSON만 답해: {"ok":true,"reason":"한국어 한 문장"}`,{images:[file]});
+
+async function aiCheckSold(file, m) {
+  const src = await shrink(file);
+  const { data, error } = await sb.functions.invoke("verify-photo", {
+    body: { type: "sold", imageBase64: src, menu: m }
+  });
+  if (error || !data) return { skipped: true };
+  return data;
 }
 const aiErr=e=>e&&e.code==="not_granted"?"AI 사용을 허용하지 않아 확인할 수 없어요":e&&e.code==="rate_limited"?"요청이 많아요. 잠시 후 다시 시도해 주세요":e&&e.code==="image_rejected"?"이 사진은 확인할 수 없어요. 다른 사진을 골라 주세요":"사진 확인에 실패했어요. 다시 시도해 주세요";
 function shrink(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const img=new Image();img.onerror=rej;img.onload=()=>{const w=Math.min(560,img.width),h=Math.round(img.height*w/img.width),c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);res(c.toDataURL("image/jpeg",.72))};img.src=fr.result};fr.readAsDataURL(file)})}
