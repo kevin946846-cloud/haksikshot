@@ -11,10 +11,23 @@ function track(p, quiet) {   // 쓰기 요청: 실패하면 서버 상태로 되
   Q.push(x); x.finally(() => { Q.splice(Q.indexOf(x), 1); if (!quiet) hy(500) }); return x;
 }
 const API = {
-  eat: (id, slot) => track(sb.from("meals").insert({ menu_id: id, slot })),
-  uneat: id => track(sb.from("meals").delete().eq("user_id", me).eq("menu_id", id).gte("created_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString())),
-  review: (id, r) => track(sb.from("reviews").upsert({ user_id: me, menu_id: id, stars: r.s, body: r.t, feedback: r.f }, { onConflict: "user_id,menu_id" })),
-  vote: (k, v) => { const [week, id] = k.split("|"); return track(v ? sb.from("votes").upsert({ user_id: me, week, menu_id: id, v }, { onConflict: "user_id,week,menu_id" }) : sb.from("votes").delete().eq("user_id", me).eq("week", week).eq("menu_id", id)) },
+  eat: (id, slot) => {
+    if (!me) { toast("로그인 세션을 불러오는 중이에요. 잠시 후 다시 시도해 주세요."); return Promise.resolve(); }
+    return track(sb.from("meals").insert({ user_id: me, menu_id: id, slot }));
+  },
+  uneat: id => {
+    if (!me) { toast("로그인 세션을 불러오는 중이에요. 잠시 후 다시 시도해 주세요."); return Promise.resolve(); }
+    return track(sb.from("meals").delete().eq("user_id", me).eq("menu_id", id).gte("created_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString()));
+  },
+  review: (id, r) => {
+    if (!me) { toast("로그인 세션을 불러오는 중이에요. 잠시 후 다시 시도해 주세요."); return Promise.resolve(); }
+    return track(sb.from("reviews").upsert({ user_id: me, menu_id: id, stars: r.s, body: r.t, feedback: r.f }, { onConflict: "user_id,menu_id" }));
+  },
+  vote: (k, v) => {
+    if (!me) { toast("로그인 세션을 불러오는 중이에요. 잠시 후 다시 시도해 주세요."); return Promise.resolve(); }
+    const [week, id] = k.split("|"); 
+    return track(v ? sb.from("votes").upsert({ user_id: me, week, menu_id: id, v }, { onConflict: "user_id,week,menu_id" }) : sb.from("votes").delete().eq("user_id", me).eq("week", week).eq("menu_id", id));
+  },
   restock: id => track(sb.from("sold").delete().eq("menu_id", id)),
   rankHist: (week, ord) => track(sb.from("rank_hist").upsert({ week, ord }, { onConflict: "week", ignoreDuplicates: true }), true),
   wc: (theme, winner, log) => track(sb.from("wc_runs").insert({ theme, winner, log }))
