@@ -5,11 +5,12 @@ const Q = [], AGG = { votes: {} };
 const pub = p => p ? sb.storage.from("photos").getPublicUrl(p).data.publicUrl : null;
 const hy = ms => { clearTimeout(hy.t); hy.t = setTimeout(hydrate, ms) };
 
-function track(p, quiet) {   // 쓰기 요청: 실패하면 서버 상태로 되돌림
+function track(p, quiet) {  // 쓰기 요청: 실패하면 서버 상태로 되돌림
   const x = Promise.resolve(p).then(r => { if (r && r.error) throw r.error })
     .catch(e => { console.error(e); if (!quiet) { toast("저장하지 못했어요. 다시 시도해 주세요"); lastSig = "" } });
   Q.push(x); x.finally(() => { Q.splice(Q.indexOf(x), 1); if (!quiet) hy(500) }); return x;
 }
+
 const API = {
   eat: (id, slot) => {
     if (!me) { toast("로그인 세션을 불러오는 중이에요. 잠시 후 다시 시도해 주세요."); return Promise.resolve(); }
@@ -63,7 +64,6 @@ async function hydrate() {
     const sig = JSON.stringify([rv, ph, so, ml, ws, vt, rh, wr.length, wr[0]]);
     if (sig === lastSig) return; lastSig = sig;
 
-    // 후기: 내 것은 st.mine, 다른 사람 것은 SEED_RV / RATE(내 것 제외 평균)
     st.mine = {}; Object.keys(SEED_RV).forEach(k => delete SEED_RV[k]); Object.keys(RATE).forEach(k => delete RATE[k]);
     const acc = {};
     rv.forEach(r => {
@@ -91,7 +91,7 @@ async function hydrate() {
       (r.log || []).forEach(([a, b]) => { S[a] = S[a] || { w: 0, l: 0, champ: 0 }; S[b] = S[b] || { w: 0, l: 0, champ: 0 }; S[a].w++; S[b].l++ });
       S[r.winner] = S[r.winner] || { w: 0, l: 0, champ: 0 }; S[r.winner].champ++;
     });
-    if (document.activeElement && document.activeElement.tagName === "TEXTAREA") { pendingRender = true; return }  // 입력 중엔 화면을 건드리지 않음
+    if (document.activeElement && document.activeElement.tagName === "TEXTAREA") { pendingRender = true; return }
     render();
   } catch (e) { console.error(e); lastSig = ""; if (!hydrate.warned) { hydrate.warned = true; toast("서버에서 데이터를 불러오지 못했어요") } }
 }
@@ -107,7 +107,6 @@ async function hydrate() {
   document.addEventListener("focusout", () => { if (pendingRender) { pendingRender = false; setTimeout(render, 0) } });
 })();
 
-// ── 복구 코드 UI (내 입맛 탭 맨 아래) ──
 document.getElementById("view-taste").insertAdjacentHTML("beforeend", '<div id="acct"></div>');
 const acct = { made: null, code: null, restoring: false };
 const BOX = "background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px";
