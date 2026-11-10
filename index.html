@@ -1,0 +1,728 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>학식샷</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: phone-width app; each tab has its own format — kiosk grid (메뉴), goal board (추천), taste profile (내 입맛), leaderboard (랭킹) */
+:root{
+  --bg:#eef2ef; --surface:#ffffff; --ink:#18221e; --muted:#5d6b65; --line:#d5ddd8;
+  --accent:#1f6b52; --accent-soft:#dcefe6; --ticket:#ffd84d; --ticket-ink:#3a2f00; --star:#e8a317;
+  --sold:#b4322a; --sold-soft:#f8e1de; --diet:#2e7bbf; --diet-soft:#dfecf8; --bulk:#c4581f; --bulk-soft:#f9e4d6; --value:#6b4fb3; --value-soft:#e9e3f7;
+  --display:"Do Hyeon","Noto Sans KR",system-ui,sans-serif;
+  --body:"Noto Sans KR",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121815; --surface:#1b2420; --ink:#e7eeea; --muted:#9aaba3; --line:#2c3833;
+  --accent:#5cc49c; --accent-soft:#1f3a2f; --ticket:#e6c23c; --ticket-ink:#2a2200; --star:#f2b938;
+  --sold:#f08a80; --sold-soft:#3a1f1c; --diet:#7db7ea; --diet-soft:#1c2c3b; --bulk:#f0915a; --bulk-soft:#3a2518; --value:#b4a0ee; --value-soft:#2a2340; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121815; --surface:#1b2420; --ink:#e7eeea; --muted:#9aaba3; --line:#2c3833;
+  --accent:#5cc49c; --accent-soft:#1f3a2f; --ticket:#e6c23c; --ticket-ink:#2a2200; --star:#f2b938;
+  --sold:#f08a80; --sold-soft:#3a1f1c; --diet:#7db7ea; --diet-soft:#1c2c3b; --bulk:#f0915a; --bulk-soft:#3a2518; --value:#b4a0ee; --value-soft:#2a2340; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.app{max-width:520px;margin:0 auto;min-height:100%;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 96px;display:flex;flex-direction:column;gap:14px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+h1{font-family:var(--display);font-weight:400;font-size:34px;line-height:1;margin:0}
+h1 span{color:var(--accent)}
+h2{font-family:var(--display);font-weight:400;font-size:22px;margin:4px 0 0;text-wrap:balance}
+.date{font-size:13px;color:var(--muted);text-align:right}
+.proto{font-size:12px;background:var(--accent-soft);color:var(--accent);padding:8px 12px;border-radius:10px;margin:0}
+.hint{font-size:12px;color:var(--muted)}
+.view{display:flex;flex-direction:column;gap:14px}
+.rhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.empty{color:var(--muted);font-size:14px;text-align:center;padding:20px 12px;border:1px dashed var(--line);border-radius:14px}
+/* ── 메뉴: 키오스크 그리드 ── */
+.slotbar{display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.slotbar .sl{padding:3px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-weight:700}
+.slotbar .sl.on{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.cats{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}
+.cat{font:inherit;font-family:var(--display);font-size:20px;background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:8px 4px;cursor:pointer}
+.cat[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.cat small{font-family:var(--body);font-size:12px;margin-left:4px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media (max-width:340px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{position:relative;font:inherit;color:var(--ink);text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 6px 8px;display:flex;flex-direction:column;gap:2px;cursor:pointer;min-width:0}
+.tt{height:60px;border-radius:8px;overflow:hidden;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:24px;color:var(--accent);margin-bottom:4px}
+.tt img{width:100%;height:100%;object-fit:cover;display:block}
+.tn{font-weight:700;font-size:13px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em;word-break:keep-all}
+.tp{font-size:12.5px;font-variant-numeric:tabular-nums;font-weight:500}
+.tr{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tr b{color:var(--star);font-weight:400}
+.badge{position:absolute;top:10px;left:10px;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px}
+.badge.sold{background:var(--sold);color:var(--surface)}
+.badge.plan{background:var(--ticket);color:var(--ticket-ink)}
+.badge.done{background:var(--accent);color:var(--surface)}
+.tile.sold{background:var(--bg)}
+.tile.sold .tt{filter:grayscale(1);opacity:.55}
+.tile.sold .tn,.tile.sold .tp{color:var(--muted)}
+.divider{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.divider::after{content:"";flex:1;border-top:1px solid var(--line)}
+/* ── 메뉴 추천: 목표 보드 ── */
+.goals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.goal{font:inherit;text-align:left;color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:10px;cursor:pointer;display:flex;flex-direction:column;gap:2px;min-width:0}
+.goal b{font-family:var(--display);font-weight:400;font-size:19px;line-height:1.15}
+.goal small{font-size:11.5px;color:var(--muted);line-height:1.35}
+.goal[aria-pressed="true"]{border-color:var(--g);background:var(--gs)}
+.g-diet{--g:var(--diet);--gs:var(--diet-soft)} .g-bulk{--g:var(--bulk);--gs:var(--bulk-soft)} .g-value{--g:var(--value);--gs:var(--value-soft)}
+.pickhero{font:inherit;text-align:left;color:var(--ink);background:var(--gs);border:0;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px;cursor:pointer}
+.pickhero .eyebrow{font-size:12px;font-weight:700;color:var(--g);letter-spacing:.3px}
+.pickhero .hn{font-family:var(--display);font-size:32px;line-height:1.1;word-break:keep-all}
+.pickhero .why{font-size:14px}
+.bignums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.bignums div{background:var(--surface);border-radius:12px;padding:8px 10px}
+.bignums b{display:block;font-family:var(--display);font-weight:400;font-size:24px;font-variant-numeric:tabular-nums;line-height:1.1}
+.bignums span{font-size:11.5px;color:var(--muted)}
+.cmp{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.cr{font:inherit;color:var(--ink);text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 12px;display:grid;grid-template-columns:24px 1fr;gap:4px 10px;cursor:pointer}
+.cr:last-child{border-bottom:0}
+.cr .n{font-family:var(--display);font-size:20px;color:var(--g);grid-row:span 2}
+.cr .t{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:14.5px;min-width:0}
+.cr .t span:last-child{font-weight:500;font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;white-space:nowrap}
+.bars{display:grid;grid-template-columns:44px 1fr 46px;gap:2px 6px;align-items:center;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bars i{display:block;height:6px;border-radius:6px;background:var(--bg);overflow:hidden}
+.bars i u{display:block;height:100%;border-radius:6px;background:var(--g)}
+.bars i.k u{background:var(--muted)}
+.note{font-size:12.5px;color:var(--muted);background:var(--surface);border-radius:12px;padding:10px 12px;margin:0}
+/* ── 내 입맛: 프로필 ── */
+.meals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.meal{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:2px;min-height:86px;min-width:0}
+.meal .lb{font-size:12px;font-weight:700;color:var(--muted)}
+.meal b{font-size:14px;line-height:1.3;word-break:keep-all}
+.meal small{font-size:11.5px;color:var(--muted)}
+.meal.on{border-color:var(--accent);background:var(--accent-soft)}
+.meal.on .lb{color:var(--accent)}
+.summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.stat b{display:block;font-family:var(--display);font-weight:400;font-size:26px;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat span{font-size:12px;color:var(--muted)}
+.taste{background:var(--ink);color:var(--bg);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.taste .tl{font-size:12px;opacity:.75}
+.taste .tt2{font-family:var(--display);font-size:28px;line-height:1.15}
+.tags{display:flex;flex-direction:column;gap:6px}
+.tag{display:grid;grid-template-columns:52px 1fr 28px;gap:8px;align-items:center;font-size:13px;font-variant-numeric:tabular-nums}
+.tag i{display:block;height:8px;border-radius:8px;background:rgba(127,127,127,.3);overflow:hidden}
+.tag i u{display:block;height:100%;background:var(--ticket);border-radius:8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:inherit;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
+.chip small{color:var(--muted)}
+.tl2{display:flex;flex-direction:column;gap:0;border-left:2px solid var(--line);margin-left:6px}
+.ti{font:inherit;color:var(--ink);text-align:left;background:none;border:0;position:relative;padding:4px 0 12px 16px;display:flex;flex-direction:column;cursor:pointer}
+.ti::before{content:"";position:absolute;left:-7px;top:9px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--accent)}
+.ti small{color:var(--muted);font-size:12px}
+.ti b{font-size:14.5px}
+/* ── 랭킹 ── */
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{font:inherit;font-size:13px;font-weight:700;border:0;background:none;color:var(--muted);padding:5px 12px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.rank-list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.rk{font:inherit;color:var(--ink);text-align:left;background:none;border:0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:10px 12px;cursor:pointer}
+.rk:last-child{border-bottom:0}
+.rk .n{font-family:var(--display);font-size:22px;color:var(--muted);text-align:center}
+.rk:nth-child(-n+3) .n{color:var(--accent)}
+.rk .m{min-width:0}.rk .m b{display:block;font-size:14.5px}.rk .m small{color:var(--muted);font-size:12px}
+.rk .v{font-variant-numeric:tabular-nums;font-weight:700;text-align:right;white-space:nowrap}
+.bar{display:block;height:4px;background:var(--bg);border-radius:4px;margin-top:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+/* ── 버튼 ── */
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{flex:1 1 auto;font:inherit;font-size:14px;font-weight:700;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-align:center}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.btn.ticket{background:var(--ticket);border-color:var(--ticket);color:var(--ticket-ink)}
+.btn.warn{color:var(--sold);border-color:var(--sold-soft)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn input{display:none}
+.btn small{display:block;font-weight:400;font-size:11.5px;opacity:.8}
+:is(.btn,.cat,.tab,.tile,.goal,.pickhero,.cr,.rk,.chip,.ti):focus-visible,.btn:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+/* ── 상세 ── */
+#detail{border:0;padding:0;width:100%;max-width:560px;height:min(94vh,940px);max-height:none;margin:auto auto 0;border-radius:20px 20px 0 0;background:var(--surface);color:var(--ink);overflow:auto}
+#detail::backdrop{background:rgba(0,0,0,.5)}
+.dwrap{display:flex;flex-direction:column;gap:16px;padding:4px max(16px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px))}
+.dbar{position:sticky;top:0;z-index:2;background:var(--surface);display:flex;justify-content:space-between;align-items:center;padding:12px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line)}
+.dbar b{font-size:13px;color:var(--muted);font-weight:500}
+.x{font:inherit;font-size:13px;font-weight:700;background:var(--bg);border:0;color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}
+.hero{position:relative;aspect-ratio:4/3;max-width:100%;border-radius:16px;overflow:hidden;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--muted);text-align:center;font-size:13px}
+.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero .big{font-family:var(--display);font-size:44px;color:var(--accent)}
+.stamp{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;gap:8px;z-index:1}
+.stamp span{background:rgba(0,0,0,.62);color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;font-variant-numeric:tabular-nums}
+.stamp .ok{background:rgba(31,107,82,.9)}
+.sold .hero img{filter:grayscale(1)}
+.dname{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.dname h3{font-family:var(--display);font-weight:400;font-size:30px;line-height:1.15;margin:0;word-break:keep-all}
+.dname .price{font-family:var(--display);font-size:24px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.meta{font-size:13.5px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.meta .s{color:var(--star);letter-spacing:1px}
+.pill{font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.pill.sold{background:var(--sold-soft);color:var(--sold)}
+.pill.ok{background:var(--accent-soft);color:var(--accent)}
+.panel{background:var(--bg);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.panel h4{margin:0;font-size:13px;font-weight:700;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.panel h4 small{font-weight:400;color:var(--muted)}
+.nutri{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.nutri div{background:var(--surface);border-radius:10px;padding:8px 6px;text-align:center}
+.nutri b{display:block;font-family:var(--display);font-weight:400;font-size:20px;font-variant-numeric:tabular-nums;line-height:1.2}
+.nutri span{font-size:11px;color:var(--muted)}
+.nrow{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ai em{font-style:normal;font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px}
+.status{font-size:13px;padding:10px 12px;border-radius:12px;background:var(--accent-soft);color:var(--accent)}
+.status.bad{background:var(--sold-soft);color:var(--sold)}
+.proof{display:flex;gap:10px;align-items:center;font-size:12.5px;color:var(--muted)}
+.proof img{width:56px;height:56px;object-fit:cover;border-radius:8px}
+.slotpick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stars{display:flex;gap:4px}
+.stars button{font-size:30px;line-height:1;background:none;border:0;color:var(--line);cursor:pointer;padding:2px}
+.stars button.on{color:var(--star)}
+textarea{font:inherit;width:100%;min-height:72px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface);color:var(--ink);resize:vertical}
+.reviews{display:flex;flex-direction:column;gap:10px}
+.rv{display:flex;flex-direction:column;gap:2px;padding-bottom:10px;border-bottom:1px solid var(--line);font-size:14px}
+.rv:last-child{border-bottom:0}
+.rv .s{color:var(--star);font-size:13px}
+.rv small{color:var(--muted)}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);z-index:5}
+.tab{flex:1;max-width:140px;font:inherit;font-size:13.5px;font-weight:700;padding:14px 4px;border:0;background:none;color:var(--muted);cursor:pointer;border-top:3px solid transparent}
+.tab[aria-selected="true"]{color:var(--accent);border-top-color:var(--accent)}
+.herowrap{display:flex;flex-direction:column;gap:6px}
+.vr{border-bottom:1px solid var(--line)}.vr:last-child{border-bottom:0}.vr .cr{border-bottom:0;width:100%}
+.vote{display:flex;gap:6px;padding:0 12px 10px 46px}
+.herowrap .vote{padding:0}
+.vote button{font:inherit;font-size:12.5px;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:4px 12px;cursor:pointer;font-variant-numeric:tabular-nums}
+.vote button[aria-pressed="true"][data-vote="1"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.vote button[aria-pressed="true"][data-vote="-1"]{background:var(--sold);border-color:var(--sold);color:var(--surface)}
+.mv{font-size:11px;font-weight:700;color:var(--muted);margin-left:4px}.mv.up{color:var(--accent)}.mv.dn{color:var(--sold)}
+.wcbanner{background:var(--ink);color:var(--bg);border-radius:18px;padding:16px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.wcbanner div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.wcbanner b{font-family:var(--display);font-weight:400;font-size:24px;line-height:1.15}
+.wcbanner small{font-size:12px;opacity:.75}
+.wcbanner .btn{flex:0 0 auto}
+.eyebrow2{font-size:12px;font-weight:700;color:var(--ticket);letter-spacing:.3px}
+#wc{border:0;padding:0;width:100%;max-width:560px;height:min(94vh,940px);max-height:none;margin:auto auto 0;border-radius:20px 20px 0 0;background:var(--surface);color:var(--ink);overflow:auto}
+#wc::backdrop{background:rgba(0,0,0,.6)}
+.wcbody{padding:16px max(16px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.wcq{margin:0;text-align:center;font-size:14px;color:var(--muted)}
+.wcpair{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:center}
+.vs{font-family:var(--display);font-size:22px;color:var(--bulk)}
+.wcc{font:inherit;color:var(--ink);text-align:center;background:var(--bg);border:2px solid var(--line);border-radius:16px;padding:10px 8px 14px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;min-width:0}
+.wcc:hover{border-color:var(--accent)}
+.wcc:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wci{width:100%;aspect-ratio:1;max-width:100%;border-radius:12px;overflow:hidden;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:52px;color:var(--accent);margin-bottom:6px}
+.wci img{width:100%;height:100%;object-fit:cover}
+.wcc b{font-family:var(--display);font-weight:400;font-size:21px;line-height:1.2;word-break:keep-all}
+.wcc small{font-size:12px;color:var(--muted)}
+.wcprog{height:6px;background:var(--bg);border-radius:6px;overflow:hidden}
+.wcprog i{display:block;height:100%;background:var(--accent)}
+.wcwin{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:24px 0}
+.wcwin .eyebrow2{color:var(--bulk)}
+.wcwn{font-family:var(--display);font-size:44px;line-height:1.1;word-break:keep-all}
+.wcwin .actions{width:100%;margin-top:8px}
+.wcthemes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.wct{font:inherit;text-align:left;color:var(--bg);background:var(--ink);border:0;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:4px;cursor:pointer;min-width:0}
+.wct b{font-family:var(--display);font-weight:400;font-size:19px;line-height:1.2;word-break:keep-all}
+.wct small{font-size:12px;opacity:.75}
+.wct span{margin-top:6px;align-self:flex-start;font-size:12px;font-weight:700;background:var(--ticket);color:var(--ticket-ink);padding:3px 10px;border-radius:999px}
+.wct:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wcseg{align-self:flex-start;flex-wrap:wrap;max-width:100%}
+.sortbar{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.sortbar button{flex:none;font:inherit;font-size:12.5px;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:5px 12px;cursor:pointer}
+.sortbar button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.sortbar button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.qrow{display:grid;grid-template-columns:64px 1fr;gap:8px;align-items:center}
+.ql{font-size:12.5px;font-weight:700;color:var(--muted)}
+.qopts{display:flex;gap:6px;flex-wrap:wrap}
+.qopts button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 11px;cursor:pointer}
+.qopts button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:700}
+.qopts button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.qsum{font-size:12.5px;color:var(--accent)}
+.wchead,.wcsplash{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+.wcsteps{display:flex;gap:4px;justify-content:center;flex-wrap:wrap}
+.wcsteps span{font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--bg);color:var(--muted)}
+.wcsteps span.done{text-decoration:line-through;opacity:.55}
+.wcsteps span.now{background:var(--bulk);color:var(--surface)}
+.wcbig{font-family:var(--display);font-size:clamp(56px,18vw,88px);line-height:1;color:var(--bulk);letter-spacing:-1px;margin-top:6px}
+.wchead[data-r="2"] .wcbig,.wcsplash[data-r="2"] .sbig{color:var(--sold)}
+.wccount{font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums}
+.wcdots{display:flex;gap:6px;justify-content:center;margin-top:4px}
+.wcdots i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.wcdots i.d{background:var(--bulk);opacity:.45}
+.wcdots i.c{background:var(--bulk);width:20px;border-radius:8px}
+.wcsplash{justify-content:center;min-height:62vh;gap:10px;cursor:pointer}
+.sbig{font-family:var(--display);font-size:clamp(96px,32vw,150px);line-height:.95;color:var(--bulk);letter-spacing:-2px}
+.ssub{font-family:var(--display);font-size:22px}
+.wcleft{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:420px;margin-top:6px}
+.wcleft span{font-size:12.5px;background:var(--bg);border-radius:999px;padding:4px 10px}
+@media (prefers-reduced-motion:no-preference){
+ .sbig{animation:pop .55s cubic-bezier(.2,1.6,.4,1) both}
+ .ssub,.wcleft{animation:rise .5s .25s ease-out both}
+ @keyframes pop{from{transform:scale(.4)}to{transform:none}}
+ @keyframes rise{from{transform:translateY(12px)}to{transform:none}}
+}
+.toast{position:fixed;left:50%;bottom:calc(72px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:13px;font-weight:700;z-index:20;max-width:calc(100% - 32px);text-align:center}
+</style>
+
+<div class="app">
+  <header>
+    <h1>학식<span>샷</span></h1>
+    <div class="date" id="today"></div>
+  </header>
+  <p class="proto">베타 버전이에요. 메뉴·가격은 다래락 키오스크 기준이고, 영양성분과 시중가는 추정치예요.</p>
+
+  <section id="view-menu" class="view" aria-label="메뉴">
+    <div class="slotbar" id="slotbar"></div>
+    <div class="cats" role="tablist" id="cats"></div>
+    <div class="sortbar" id="sortbar"></div>
+    <div class="view" id="menus"></div>
+  </section>
+
+  <section id="view-reco" class="view" aria-label="메뉴 추천" hidden>
+    <div class="rhead"><h2>오늘 뭐 먹지?</h2><span class="hint" id="reco-slot"></span></div>
+    <div class="goals" id="goals"></div>
+    <div id="reco-hero"></div>
+    <div class="rhead"><h2 id="reco-sub">다른 후보</h2><span class="hint">품절 메뉴 제외</span></div>
+    <div class="cmp" id="reco-list"></div>
+    <p class="note" id="reco-note"></p>
+  </section>
+
+  <section id="view-taste" class="view" aria-label="내 입맛" hidden>
+    <h2>오늘 먹은 것</h2>
+    <div class="meals" id="meals"></div>
+    <div id="taste-card"></div>
+    <div class="rhead"><h2>이번 주</h2><span class="hint">먹음 체크 기준</span></div>
+    <div class="summary" id="week-stats"></div>
+    <div class="rhead"><h2>입맛 저격 추천</h2><span class="hint">아직 안 먹어 본 메뉴</span></div>
+    <div id="taste-reco"></div>
+    <div class="rhead"><h2>먹을 예정</h2></div>
+    <div class="chips" id="plans"></div>
+    <h2>식사 기록</h2>
+    <div id="history"></div>
+  </section>
+
+  <section id="view-rank" class="view" aria-label="랭킹" hidden>
+    <div class="rhead"><h2>학식 이상형 월드컵</h2><span class="hint">16강 토너먼트 · 1분이면 끝나요</span></div>
+    <div class="wcthemes" id="wc-themes"></div>
+    <div class="rhead"><h2>이번 주 많이 먹은 메뉴</h2><span class="hint">먹음 체크 수 기준</span></div>
+    <div class="rank-list" id="rank-sales"></div>
+    <div class="rhead"><h2>별점 순위</h2><div class="seg" id="rank-seg"><button data-rank="wk" aria-pressed="true">최근 7일</button><button data-rank="all" aria-pressed="false">전체 기간</button></div></div>
+    <p class="hint" style="margin:0">평가가 5개 이상인 메뉴만 순위에 올라요.</p>
+    <div class="rank-list" id="rank-star"></div>
+    <div class="rhead"><h2>월드컵 순위</h2><span class="hint">끝까지 한 판만 집계 · 우승 횟수, 1:1 승률 순</span></div>
+    <div class="seg wcseg" id="wc-seg"></div>
+    <div class="rank-list" id="rank-wc"></div>
+  </section>
+</div>
+
+<nav role="tablist">
+  <button class="tab" role="tab" data-view="menu" aria-selected="true">메뉴</button>
+  <button class="tab" role="tab" data-view="reco" aria-selected="false">메뉴 추천</button>
+  <button class="tab" role="tab" data-view="taste" aria-selected="false">내 입맛</button>
+  <button class="tab" role="tab" data-view="rank" aria-selected="false">랭킹</button>
+</nav>
+
+<dialog id="detail">
+  <div class="dbar"><b id="dbar-cat"></b><button class="x" id="detail-close">닫기</button></div>
+  <div class="dwrap" id="detail-body"></div>
+</dialog>
+<dialog id="wc">
+  <div class="dbar"><b id="wc-round"></b><button class="x" data-wcclose>그만하기</button></div>
+  <div class="wcbody" id="wc-body"></div>
+</dialog>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script>
+const M=(id,cat,name,price,n)=>({id,cat,name,price,n:{kcal:n[0],protein:n[1],carbs:n[2],sugar:n[3]}});
+const MENUS=[
+ M("i1","일품","해물순두부찌개",5500,[520,28,70,6]),M("i2","일품","고기순두부찌개",5500,[600,32,70,6]),
+ M("i3","일품","돼지두루치기",6000,[780,35,95,14]),M("i4","일품","날치알밥",4500,[520,18,85,6]),
+ M("i5","일품","치즈날치알밥",5000,[640,25,88,7]),M("i6","일품","김치찌개",5500,[560,25,72,6]),
+ M("i7","일품","부대찌개",5500,[720,28,85,8]),M("i8","일품","돌솥비빔밥",5000,[620,18,98,10]),
+ M("i9","일품","비빔밥+된장찌개",4500,[600,20,95,9]),M("i10","일품","닭갈비알밥",6000,[720,35,95,14]),
+ M("i11","일품","돼지국밥",5500,[700,38,80,3]),M("i12","일품","순대국밥",5500,[720,30,82,3]),
+ M("i13","일품","소고기불고기뚝배기",6000,[680,35,85,15]),
+ M("y1","양식","등심돈까스",5000,[850,35,100,12]),M("y2","양식","고구마치즈돈까스",5500,[980,38,115,20]),
+ M("y3","양식","치킨마요덮밥",5500,[820,30,105,10]),M("y4","양식","데리야끼치킨볶음밥",5000,[760,30,105,16]),
+ M("y5","양식","목살스테이크",6000,[820,40,85,12]),M("y6","양식","함박오므라이스",5500,[880,32,105,14]),
+ M("y7","양식","오므라이스",4500,[680,20,100,12]),M("y8","양식","함박스테이크",4500,[720,30,85,14]),
+ M("y9","양식","피카츄오므라이스",5500,[700,20,100,13]),
+ M("b1","분식","라면+공기밥",3500,[800,15,135,5]),M("b2","분식","공기밥",500,[300,5,66,0]),
+ M("b3","분식","들기름메밀국수",5000,[550,15,90,10]),M("b4","분식","떡볶이",4000,[500,10,100,20]),
+ M("b5","분식","라볶이",4500,[650,14,115,20]),M("b6","분식","김밥",2500,[450,12,75,5]),
+ M("b7","분식","참치김밥",3000,[550,18,75,5]),M("b8","분식","돈까스김밥",3500,[620,20,85,6]),
+ M("b9","분식","스팸김밥",3500,[600,16,78,6]),M("b10","분식","멸치육수잔치국수",3000,[450,14,85,4]),
+ M("b11","분식","라면",3000,[500,10,70,4]),M("b12","분식","치즈라면",3500,[580,15,72,4]),
+ M("b13","분식","어묵우동",4000,[480,16,85,4]),M("b14","분식","새우튀김우동",4500,[580,18,90,5]),
+ M("b15","분식","짜계치",3800,[700,20,90,8]),M("b16","분식","소고기만두국+밥",5000,[650,25,105,4]),
+ M("b17","분식","쇠고기떡국",5000,[600,22,105,3]),M("b18","분식","쫄면",4500,[550,14,110,22]),
+ M("b19","분식","칼국수",4500,[520,16,95,3]),M("b20","분식","물냉면",5000,[480,15,95,12]),
+ M("b21","분식","물비빔냉면",5000,[520,15,100,18])
+];
+const byId=id=>MENUS.find(m=>m.id===id);
+// ── 다른 학생 후기·주간 판매 수·별점 통계 (실제 데이터가 모이면 채워짐) ──
+const SEED_RV={};
+const AI_LINE={};
+const SALES={};
+const RATE={};
+const SEED_SOLD=["y4","b3","b4","b5","b9","b10","b13","b14","b18","b19","b20","b21"];
+
+
+// 맛 태그 (내 입맛 분석용)
+const TAGS={i1:"국물 매콤 해산물",i2:"국물 매콤 고기",i3:"매콤 고기 밥",i4:"밥 해산물",i5:"밥 치즈 해산물",i6:"국물 매콤",i7:"국물 매콤 고기",i8:"밥 채소",i9:"밥 채소 국물",i10:"매콤 고기 밥",i11:"국물 고기",i12:"국물 고기",i13:"국물 고기 단짠",
+ y1:"튀김 고기",y2:"튀김 치즈 단짠",y3:"밥 고기 단짠",y4:"밥 고기 단짠",y5:"고기 단짠",y6:"밥 고기 단짠",y7:"밥 단짠",y8:"고기 단짠",y9:"밥 단짠",
+ b1:"면 매콤 밥",b2:"밥",b3:"면 채소",b4:"매콤 단짠",b5:"매콤 면 단짠",b6:"밥 채소",b7:"밥 해산물",b8:"밥 튀김",b9:"밥 고기",b10:"면 국물 해산물",b11:"면 매콤 국물",b12:"면 매콤 치즈",b13:"면 국물 해산물",b14:"면 국물 튀김 해산물",b15:"면 치즈 단짠",b16:"국물 고기 밥",b17:"국물 고기",b18:"면 매콤 채소",b19:"면 국물",b20:"면 국물",b21:"면 매콤"};
+MENUS.forEach(m=>m.tags=(TAGS[m.id]||"").split(" ").filter(Boolean));
+// 시중 식당 1인분 평균 가격 추정 (원)
+const MARKET={i1:10000,i2:10000,i3:11000,i4:9000,i5:10000,i6:9500,i7:11000,i8:10000,i9:10000,i10:11000,i11:10000,i12:10000,i13:12000,
+ y1:10000,y2:12000,y3:7500,y4:9000,y5:15000,y6:12000,y7:9500,y8:12000,y9:11000,
+ b1:5500,b2:1000,b3:11000,b4:5000,b5:7000,b6:3500,b7:5000,b8:5500,b9:5000,b10:7000,b11:5000,b12:5500,b13:7000,b14:9000,b15:6000,b16:9000,b17:9000,b18:7000,b19:9000,b20:10000,b21:10000};
+MENUS.forEach(m=>{m.market=MARKET[m.id]||m.price;m.off=Math.round((1-m.price/m.market)*100);m.save=m.market-m.price});
+
+// ── 상태 (이 브라우저에만 저장) ──
+const KEY="haksikshot-v1";
+let st={plans:{},meals:[],mine:{},photos:{},sold:{},votes:{},rankHist:{},wc:{byTheme:{},history:[]}};
+try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s)st=Object.assign(st,s)}catch(e){}
+if(!st.soldReset){st.sold={};st.soldReset=true}
+if(!st.rvReset){st.mine={};st.rvReset=true}
+// 품절 표시는 매일 19시에 초기화
+function lastReset(){const d=new Date();d.setHours(19,0,0,0);if(Date.now()<d.getTime())d.setDate(d.getDate()-1);return d.getTime()}
+function purgeSold(){const r=lastReset();let ch=false;Object.keys(st.sold).forEach(id=>{if(st.sold[id].at<r){delete st.sold[id];ch=true}});return ch}
+purgeSold();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){toast("저장 공간이 부족해 일부 사진이 저장되지 않았어요")}}
+
+const $=s=>document.querySelector(s);
+const DAY=864e5,SLOTS=["아침","점심","저녁"];
+const won=n=>n.toLocaleString("ko-KR")+"원";
+const stars=n=>"★".repeat(n)+"☆".repeat(5-n);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ago=t=>{const m=Math.max(0,Math.round((Date.now()-t)/6e4));return m<1?"방금":m<60?m+"분 전":m<1440?Math.round(m/60)+"시간 전":Math.floor(m/1440)+"일 전"};
+const dayLabel=t=>{const d=new Date(t);return `${d.getMonth()+1}/${d.getDate()} (${"일월화수목금토"[d.getDay()]})`};
+const stampOf=t=>`${dayLabel(t)} ${new Date(t).toLocaleTimeString("ko-KR",{hour:"numeric",minute:"2-digit"})}`;
+const isToday=t=>new Date(t).toDateString()===new Date().toDateString();
+const nowSlot=()=>{const h=new Date().getHours();return h<11?"아침":h<16?"점심":"저녁"};
+const QUICK=[
+ {k:"portion",label:"양",opts:["적음","보통","많음"]},
+ {k:"salt",label:"간",opts:["싱거움","딱 좋음","짬"]},
+ {k:"spicy",label:"맵기",opts:["순함","적당","매움"],only:m=>m.tags.includes("매콤")},
+ {k:"smell",label:"냄새",opts:["괜찮음","느끼함","기름 냄새","고기 잡내"],optsFor:m=>["괜찮음","느끼함",...(m.tags.includes("튀김")?["기름 냄새"]:[]),...(m.tags.includes("고기")?["고기 잡내"]:[])],only:m=>m.tags.includes("튀김")||m.tags.includes("고기")},
+ {k:"again",label:"또 먹을래?",opts:["또 먹을래요","글쎄요","다신 안 먹어요"]}
+];
+const fText=f=>f?QUICK.map(q=>f[q.k]?(q.k==="again"?f[q.k]:`${q.label} ${f[q.k]}`):"").filter(Boolean).join(" · "):"";
+let sortBy="low",cat="일품",goal="bulk",rankScope="wk",openId=null,busy={},slotOpen=false,draft={s:0,t:"",f:{}},lastMsg=null;
+const d0=new Date();$("#today").innerHTML=`${d0.getMonth()+1}월 ${d0.getDate()}일 (${"일월화수목금토"[d0.getDay()]})<br>다래락 · 나비센터 1층`;
+function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2400)}
+
+// ── AI 사진 판정 ──
+let sample=null,aiImages=false;
+(async()=>{try{sample=await window.claude?.use?.("sample")}catch(e){}
+  if(sample){const l=await sample.limits().catch(()=>null);aiImages=!!(l&&l.images)}})();
+async function aiCheckFood(file,m){
+  if(!sample||!aiImages)return {skipped:true};
+  return await sample.json(`학식 메뉴 사진 검증 작업이야. 메뉴 이름: "${m.name}" (분류: ${m.cat}).
+1) 사진이 이 메뉴의 실제 음식 사진인지 판단해. 음식이 아니거나, 누가 봐도 다른 메뉴(예: 떡볶이 메뉴에 라면 사진)거나, 부적절한 사진이면 match=false. 같은 계열의 음식이면 match=true.
+2) match=true면 사진에 보이는 1인분 양을 기준으로 영양성분을 추정해. 메뉴 이름 기준 기본 추정치는 ${m.n.kcal}kcal, 단백질 ${m.n.protein}g, 탄수화물 ${m.n.carbs}g, 당 ${m.n.sugar}g 이야.
+JSON만 답해: {"match":true,"reason":"한국어 한 문장","portion":"적음|보통|많음","nutrition":{"kcal":0,"protein":0,"carbs":0,"sugar":0}}`,{images:[file]});
+}
+async function aiCheckSold(file,m){
+  if(!sample||!aiImages)return {skipped:true};
+  return await sample.json(`학식 품절 제보 검증 작업이야. 사진이 식당 키오스크나 메뉴판이고, 그 안에 "${m.name}" 메뉴가 품절로 표시되어 있는지 판단해. 메뉴 이름과 품절 표시가 함께 보이면 ok=true, 다른 메뉴만 품절이거나 판단할 수 없으면 ok=false.
+JSON만 답해: {"ok":true,"reason":"한국어 한 문장"}`,{images:[file]});
+}
+const aiErr=e=>e&&e.code==="not_granted"?"AI 사용을 허용하지 않아 확인할 수 없어요":e&&e.code==="rate_limited"?"요청이 많아요. 잠시 후 다시 시도해 주세요":e&&e.code==="image_rejected"?"이 사진은 확인할 수 없어요. 다른 사진을 골라 주세요":"사진 확인에 실패했어요. 다시 시도해 주세요";
+function shrink(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const img=new Image();img.onerror=rej;img.onload=()=>{const w=Math.min(560,img.width),h=Math.round(img.height*w/img.width),c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);res(c.toDataURL("image/jpeg",.72))};img.src=fr.result};fr.readAsDataURL(file)})}
+
+// ── 계산 ──
+const todayMeals=()=>st.meals.filter(x=>isToday(x.at));
+const eatenToday=id=>todayMeals().find(x=>x.id===id);
+const slotUsed=s=>todayMeals().find(x=>x.slot===s);
+const avail=m=>!st.sold[m.id];
+const PF={"적음":0.85,"보통":1,"많음":1.15};
+function portionOf(id){const r=st.mine[id];return (r&&r.f&&r.f.portion)||(r&&r.portion)||(st.photos[id]&&st.photos[id].portion)||null}
+function nut(m){const ph=st.photos[m.id];if(ph&&ph.nutrition)return ph.nutrition;const f=PF[portionOf(m.id)]||1;if(f===1)return m.n;return {kcal:Math.round(m.n.kcal*f),protein:Math.round(m.n.protein*f),carbs:Math.round(m.n.carbs*f),sugar:Math.round(m.n.sugar*f)}}
+// ── 주간 가성비: 월요일 기준 주차, 투표 ──
+function weekStart(t=Date.now()){const d=new Date(t);d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d.getTime()}
+const wkKey=t=>{const d=new Date(weekStart(t));return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()};
+function votesFor(id,t){const k=wkKey(t)+"|"+id,a=AGG.votes[k]||{up:0,down:0},v=st.votes[k]||0;return {up:a.up+(v===1?1:0),down:a.down+(v===-1?1:0),mine:v}}
+function valueScore(m){
+  const lw=votesFor(m.id,Date.now()-7*DAY),tot=lw.up+lw.down,r=rate(m.id,"all");
+  return m.off+(tot?10*(lw.up-lw.down)/Math.max(5,tot):0)+(r.n>=3?(r.avg-3)*5:0)+(PF[portionOf(m.id)]?(PF[portionOf(m.id)]-1)*40:0)+({"또 먹을래요":3,"다신 안 먹어요":-3}[(st.mine[m.id]&&st.mine[m.id].f||{}).again]||0);
+}
+function rate(id,scope){
+  const base=(RATE[id]||{})[scope]||[0,0];let sum=base[0]*base[1],n=base[1];
+  const mine=st.mine[id];if(mine&&(scope==="all"||Date.now()-mine.at<7*DAY)){sum+=mine.s;n++}
+  return {avg:n?sum/n:0,n};
+}
+const weekSales=id=>(SALES[id]||0)+st.meals.filter(x=>x.id===id&&Date.now()-x.at<7*DAY).length;
+const recentPhoto=id=>{const p=st.photos[id];return p&&Date.now()-p.at<7*DAY?p:null};
+function tasteScores(){
+  const sc={};const add=(m,w)=>m.tags.forEach(t=>sc[t]=(sc[t]||0)+w);
+  st.meals.forEach(x=>{const m=byId(x.id);if(m)add(m,1)});
+  Object.entries(st.mine).forEach(([id,r])=>{const m=byId(id);if(m)add(m,r.s-3)});
+  return Object.entries(sc).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+}
+const GOALS={
+ diet:{label:"다이어트",cls:"g-diet",sub:"칼로리는 낮게, 단백질은 챙기기",
+   list:()=>MENUS.filter(m=>avail(m)&&nut(m).kcal<=650&&m.price>1000).sort((a,b)=>nut(b).protein/nut(b).kcal-nut(a).protein/nut(a).kcal),
+   why:m=>{const n=nut(m);return `${n.kcal}kcal로 가벼운데 단백질이 ${n.protein}g이라 100kcal당 ${(n.protein/n.kcal*100).toFixed(1)}g을 채워요.`},
+   note:"다이어트 추천은 650kcal 이하 메뉴 중 칼로리 대비 단백질이 높은 순이에요. 학생들이 남긴 '양' 평가와 사진 속 실제 양이 영양 추정에 반영돼요. 끼니를 거르기보다 세 끼를 가볍게 챙기는 쪽을 추천해요."},
+ bulk:{label:"벌크업",cls:"g-bulk",sub:"오늘은 득근하는 날",
+   list:()=>MENUS.filter(avail).sort((a,b)=>(nut(b).protein*2+nut(b).kcal/20)-(nut(a).protein*2+nut(a).kcal/20)),
+   why:m=>{const n=nut(m);return `단백질 ${n.protein}g, ${n.kcal}kcal로 운동 후 한 끼로 든든해요.`},
+   note:"벌크업 추천은 단백질을 가장 크게 보고 칼로리를 함께 본 점수 순이에요. '양 많음' 평가가 쌓인 메뉴일수록 위로 올라와요."},
+ value:{label:"가성비",cls:"g-value",sub:"이번 주 가성비 랭킹",
+   list:()=>MENUS.filter(m=>avail(m)&&m.price>1000).sort((a,b)=>b.off-a.off||b.save-a.save).slice(0,10).sort((a,b)=>valueScore(b)-valueScore(a)),
+   why:m=>`밖에서 사 먹으면 보통 ${won(m.market)} 정도인데 학식은 ${won(m.price)}. ${won(m.save)} 아끼는 셈이에요.`,
+   note:"가성비 랭킹은 시중가 대비 할인율이 높은 10개 메뉴를 후보로, 지난주 추천·비추천 투표, 별점, '양' 평가를 더해 매주 월요일에 다시 매겨요. 이번 주 투표는 다음 주 순위에 반영돼요."}
+};
+
+// ── 렌더: 메뉴 ──
+function renderSlotbar(){
+  const tm=todayMeals();
+  $("#slotbar").innerHTML=`오늘 먹음 체크 ${tm.length}/3`+SLOTS.map(s=>`<span class="sl${slotUsed(s)?" on":""}">${s}</span>`).join("");
+}
+function renderCats(){$("#cats").innerHTML=["일품","양식","분식"].map(c=>{const all=MENUS.filter(m=>m.cat===c),n=all.filter(avail).length;return `<button class="cat" role="tab" aria-selected="${c===cat}" data-c="${c}">${c}<small>${n}/${all.length}</small></button>`}).join("")}
+function tile(m){
+  const ph=st.photos[m.id],so=st.sold[m.id],r=rate(m.id,"all"),e=eatenToday(m.id);
+  const badge=so?'<span class="badge sold">품절</span>':e?`<span class="badge done">${e.slot}</span>`:st.plans[m.id]?'<span class="badge plan">예정</span>':"";
+  return `<button class="tile${so?" sold":""}" data-open="${m.id}">${badge}<span class="tt">${ph?`<img src="${ph.src}" alt="">`:esc(m.name[0])}</span><span class="tn">${esc(m.name)}</span><span class="tp">${won(m.price)}</span><span class="tr">${r.n?`<b>★</b> ${r.avg.toFixed(1)} (${r.n})`:"평가 없음"}</span></button>`;
+}
+function renderMenus(){
+  const SORTS={low:["가격 낮은 순",(a,b)=>a.price-b.price],high:["가격 높은 순",(a,b)=>b.price-a.price],star:["별점 순",(a,b)=>{const x=rate(a.id,"all"),y=rate(b.id,"all");return (y.n?1:0)-(x.n?1:0)||y.avg-x.avg||y.n-x.n||a.price-b.price}]};
+  $("#sortbar").innerHTML=Object.entries(SORTS).map(([k,[l]])=>`<button data-sort="${k}" aria-pressed="${k===sortBy}">${l}</button>`).join("");
+  const sorted=MENUS.filter(m=>m.cat===cat).sort(SORTS[sortBy][1]);
+  const list=sorted,on=list.filter(avail),off=list.filter(m=>!avail(m));
+  $("#menus").innerHTML=(sortBy==="star"&&!list.some(m=>rate(m.id,"all").n)?`<p class="hint" style="margin:0">아직 별점이 없어서 가격 낮은 순으로 보여요.</p>`:"")+`<div class="grid">${on.map(tile).join("")}</div>`+(off.length?`<div class="divider">품절 ${off.length}개 · 매일 19시에 초기화</div><div class="grid">${off.map(tile).join("")}</div>`:"");
+}
+// ── 렌더: 메뉴 추천 ──
+function renderReco(){
+  const g=GOALS[goal],list=g.list(),top=list[0],s=nowSlot();
+  $("#reco-slot").textContent=slotUsed(s)?`오늘 ${s}은 이미 체크했어요`:`지금은 ${s} 시간`;
+  $("#goals").innerHTML=Object.entries(GOALS).map(([k,v])=>`<button class="goal ${v.cls}" data-goal="${k}" aria-pressed="${k===goal}"><b>${v.label}</b><small>${v.sub}</small></button>`).join("");
+  const v=$("#view-reco");v.className="view "+g.cls;
+  if(!top){$("#reco-hero").innerHTML=`<div class="empty">지금 추천할 수 있는 메뉴가 없어요</div>`;$("#reco-list").innerHTML="";return}
+  const tn=nut(top),isV=goal==="value";
+  const nums=isV?`<div><b>${top.off}%</b><span>시중가 대비 할인</span></div><div><b>${won(top.save)}</b><span>아끼는 돈</span></div><div><b>${won(top.price)}</b><span>학식 가격</span></div>`
+    :`<div><b>${tn.protein}g</b><span>단백질</span></div><div><b>${tn.kcal}</b><span>kcal</span></div><div><b>${won(top.price)}</b><span>가격</span></div>`;
+  const wk=wkKey(),prev=st.rankHist[wkKey(Date.now()-7*DAY)];
+  if(isV&&!st.rankHist[wk]){st.rankHist[wk]=list.map(m=>m.id);API.rankHist(wk,st.rankHist[wk]);save()}
+  const order=isV?(st.rankHist[wk]||list.map(m=>m.id)).map(byId).filter(m=>m&&avail(m)):list;
+  const move=(m,i)=>{if(!prev)return `<span class="mv">NEW</span>`;const j=prev.indexOf(m.id);return j<0?`<span class="mv">NEW</span>`:j>i?`<span class="mv up">▲${j-i}</span>`:j<i?`<span class="mv dn">▼${i-j}</span>`:`<span class="mv">-</span>`};
+  const vote=m=>{const v=votesFor(m.id);return `<div class="vote"><button data-vote="1" data-id="${m.id}" aria-pressed="${v.mine===1}">추천 ${v.up}</button><button data-vote="-1" data-id="${m.id}" aria-pressed="${v.mine===-1}">비추천 ${v.down}</button></div>`};
+  if(isV){const ws=new Date(weekStart()),we=new Date(weekStart()+6*DAY);$("#reco-slot").textContent=`${ws.getMonth()+1}/${ws.getDate()}~${we.getMonth()+1}/${we.getDate()} · 매주 월요일 갱신`}
+  const t1=isV?order[0]:top;
+  $("#reco-hero").innerHTML=`<div class="herowrap"><button class="pickhero" data-open="${t1.id}"><span class="eyebrow">${g.label} 1순위 · ${t1.cat}${isV?" · "+move(t1,0):""}</span><span class="hn">${esc(t1.name)}</span><span class="why">${g.why(t1)}</span>
+    <span class="bignums">${isV?`<div><b>${t1.off}%</b><span>시중가 대비 할인</span></div><div><b>${won(t1.save)}</b><span>아끼는 돈</span></div><div><b>${won(t1.price)}</b><span>학식 가격</span></div>`:nums}</span></button>${isV?vote(t1):""}</div>`;
+  if(isV){
+    const maxM=Math.max(...order.map(m=>m.market));
+    $("#reco-sub").textContent="이번 주 가성비 랭킹";
+    $("#reco-list").innerHTML=order.slice(1).map((m,i)=>`<div class="vr"><button class="cr" data-open="${m.id}"><span class="n">${i+2}</span><span class="t"><span>${esc(m.name)} ${move(m,i+1)}</span><span>${m.off}% 저렴</span></span>
+      <span class="bars"><span>학식</span><i><u style="width:${Math.round(m.price/maxM*100)}%"></u></i><span>${(m.price/1000).toFixed(1)}천</span><span>시중</span><i class="k"><u style="width:${Math.round(m.market/maxM*100)}%"></u></i><span>${(m.market/1000).toFixed(1)}천</span></span></button>${vote(m)}</div>`).join("");
+    $("#reco-note").textContent=g.note+" 시중 가격은 추정치예요.";
+    return;
+  }
+  const rest=list.slice(1,8),maxP=Math.max(...list.slice(0,8).map(m=>m.n.protein)),maxK=Math.max(...list.slice(0,8).map(m=>m.n.kcal));
+  $("#reco-sub").textContent=`${g.label} 다른 후보`;
+  const maxM=Math.max(...list.slice(0,8).map(m=>m.market));
+  $("#reco-list").innerHTML=rest.map((m,i)=>`<button class="cr" data-open="${m.id}"><span class="n">${i+2}</span><span class="t"><span>${esc(m.name)}</span><span>${isV?`${m.off}% 저렴`:won(m.price)}</span></span>
+    ${isV?`<span class="bars"><span>학식</span><i><u style="width:${Math.round(m.price/maxM*100)}%"></u></i><span>${(m.price/1000).toFixed(1)}천</span><span>시중</span><i class="k"><u style="width:${Math.round(m.market/maxM*100)}%"></u></i><span>${(m.market/1000).toFixed(1)}천</span></span>`
+    :`<span class="bars"><span>단백질</span><i><u style="width:${Math.round(m.n.protein/maxP*100)}%"></u></i><span>${m.n.protein}g</span><span>칼로리</span><i class="k"><u style="width:${Math.round(m.n.kcal/maxK*100)}%"></u></i><span>${m.n.kcal}</span></span>`}</button>`).join("");
+  $("#reco-note").textContent=g.note+(goal==="value"?" 시중 가격은 추정치예요.":" 영양성분은 추정치예요.");
+}
+// ── 렌더: 내 입맛 ──
+function renderTaste(){
+  $("#meals").innerHTML=SLOTS.map(s=>{const x=slotUsed(s),m=x&&byId(x.id);return m?`<div class="meal on"><span class="lb">${s}</span><b>${esc(m.name)}</b><small>${nut(m).kcal}kcal · 단백질 ${nut(m).protein}g</small></div>`:`<div class="meal"><span class="lb">${s}</span><small>아직 안 먹었어요</small></div>`}).join("");
+  const ts=tasteScores();
+  if(ts.length){
+    const max=ts[0][1],top=ts.slice(0,2).map(([t])=>t);
+    $("#taste-card").innerHTML=`<div class="taste"><span class="tl">내 입맛 분석</span><span class="tt2">${top.map(t=>`#${t}`).join(" ")} 좋아하는 편</span><div class="tags">${ts.slice(0,5).map(([t,v])=>`<div class="tag"><span>${t}</span><i><u style="width:${Math.round(v/max*100)}%"></u></i><span>${v}</span></div>`).join("")}</div><span class="tl">먹음 체크 1회 = 1점, 별점 4점 = +1, 5점 = +2, 2점 이하는 감점</span></div>`;
+  } else $("#taste-card").innerHTML=`<div class="taste"><span class="tl">내 입맛 분석</span><span class="tt2">아직 기록이 없어요</span><span class="tl">메뉴에서 먹음 체크를 하거나, 예전에 먹어 본 메뉴에 별점을 남기면 좋아하는 맛을 분석해 드려요.</span></div>`;
+  const wk=st.meals.filter(x=>Date.now()-x.at<7*DAY),wm=wk.map(x=>byId(x.id)).filter(Boolean);
+  const kcal=wm.reduce((s,m)=>s+nut(m).kcal,0),pro=wm.reduce((s,m)=>s+nut(m).protein,0);
+  $("#week-stats").innerHTML=`<div class="stat"><b>${wm.length}끼</b><span>먹은 끼니</span></div><div class="stat"><b>${won(wm.reduce((s,m)=>s+m.price,0))}</b><span>식비</span></div><div class="stat"><b>${wm.length?Math.round(kcal/wm.length):0}</b><span>한 끼 평균 kcal (추정)</span></div><div class="stat"><b>${wm.length?Math.round(pro/wm.length):0}g</b><span>한 끼 평균 단백질 (추정)</span></div>`;
+  if(ts.length){
+    const sc=Object.fromEntries(ts),tried=new Set([...st.meals.map(x=>x.id),...Object.keys(st.mine)]);
+    const rec=MENUS.filter(m=>avail(m)&&!tried.has(m.id)&&m.price>1000).map(m=>({m,v:m.tags.reduce((s,t)=>s+(sc[t]||0),0)})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v||rate(b.m.id,"all").avg-rate(a.m.id,"all").avg).slice(0,5);
+    $("#taste-reco").innerHTML=rec.length?`<div class="chips">${rec.map(x=>`<button class="chip" data-open="${x.m.id}">${esc(x.m.name)} <small>${x.m.tags.filter(t=>sc[t]).map(t=>"#"+t).join(" ")}</small></button>`).join("")}</div>`:`<div class="empty">비슷한 맛의 메뉴는 다 먹어 봤어요</div>`;
+  } else $("#taste-reco").innerHTML=`<div class="empty">입맛 분석이 생기면 안 먹어 본 메뉴 중에서 골라 드려요</div>`;
+  const plans=Object.keys(st.plans).map(byId).filter(Boolean);
+  $("#plans").innerHTML=plans.length?plans.map(m=>`<button class="chip" data-open="${m.id}">${esc(m.name)}${st.sold[m.id]?" <small>품절 제보됨</small>":""}</button>`).join(""):`<span class="hint">메뉴에서 '먹을래요'를 누르면 여기에 모여요</span>`;
+  const hist=st.meals.slice().sort((a,b)=>b.at-a.at).slice(0,20);
+  $("#history").innerHTML=hist.length?`<div class="tl2">${hist.map(x=>{const m=byId(x.id);return m?`<button class="ti" data-open="${m.id}"><small>${dayLabel(x.at)} ${x.slot}</small><b>${esc(m.name)}</b><small>${won(m.price)} · ${nut(m).kcal}kcal${st.mine[m.id]?" · "+stars(st.mine[m.id].s):""}</small></button>`:""}).join("")}</div>`:`<div class="empty">먹음 체크한 메뉴가 날짜별로 쌓여요</div>`;
+}
+// ── 렌더: 랭킹 ──
+function renderRank(){
+  const sales=MENUS.map(m=>({m,v:weekSales(m.id)})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,10),max=sales[0]?sales[0].v:1;
+  $("#rank-sales").innerHTML=!sales.length?`<div class="empty">이번 주 먹음 체크가 쌓이면 순위가 생겨요</div>`:sales.map((x,i)=>`<button class="rk" data-open="${x.m.id}"><span class="n">${i+1}</span><span class="m"><b>${esc(x.m.name)}</b><small>${x.m.cat} · ${won(x.m.price)}</small><span class="bar"><i style="width:${Math.round(x.v/max*100)}%"></i></span></span><span class="v">${x.v}그릇</span></button>`).join("");
+  const rs=MENUS.map(m=>({m,r:rate(m.id,rankScope)})).filter(x=>x.r.n>=5).sort((a,b)=>b.r.avg-a.r.avg||b.r.n-a.r.n).slice(0,10);
+  $("#rank-star").innerHTML=rs.length?rs.map((x,i)=>`<button class="rk" data-open="${x.m.id}"><span class="n">${i+1}</span><span class="m"><b>${esc(x.m.name)}</b><small>평가 ${x.r.n}개 · ${x.m.cat}</small></span><span class="v"><span style="color:var(--star)">★</span> ${x.r.avg.toFixed(2)}</span></button>`).join(""):`<div class="empty">아직 순위를 매길 만큼 평가가 없어요</div>`;
+  document.querySelectorAll("#rank-seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.rank===rankScope));
+  $("#wc-themes").innerHTML=Object.entries(THEMES).map(([k,t])=>`<button class="wct" data-wcstart="${k}"><b>${t.title}</b><small>${t.sub}</small><span>시작하기</span></button>`).join("");
+  $("#wc-seg").innerHTML=Object.entries(THEMES).map(([k,t])=>`<button data-wcrank="${k}" aria-pressed="${k===wcTheme}">${t.short}</button>`).join("");
+  const ws=Object.entries(wcStats(wcTheme)).map(([id,x])=>({m:byId(id),x,g:x.w+x.l})).filter(r=>r.m&&r.x.w>0).sort((a,b)=>b.x.champ-a.x.champ||b.x.w/b.g-a.x.w/a.g||b.x.w-a.x.w).slice(0,10);
+  $("#rank-wc").innerHTML=ws.length?ws.map((r,i)=>`<button class="rk" data-open="${r.m.id}"><span class="n">${i+1}</span><span class="m"><b>${esc(r.m.name)}</b><small>1:1 승률 ${Math.round(r.x.w/r.g*100)}% (${r.x.w}승 ${r.x.l}패)</small></span><span class="v">우승 ${r.x.champ}회</span></button>`).join(""):`<div class="empty">월드컵을 한 판 하면 순위가 생겨요</div>`;
+}
+// ── 렌더: 상세 ──
+function renderDetail(){
+  if(!openId)return;const m=byId(openId),ph=st.photos[m.id],rp=recentPhoto(m.id),so=st.sold[m.id],r=rate(m.id,"all"),b=busy[m.id],e=eatenToday(m.id),tm=todayMeals();
+  $("#dbar-cat").textContent=`다래락 · ${m.cat}`;
+  const hero=ph?`<div class="stamp"><span>${stampOf(ph.at)} 업로드</span>${ph.verified?'<span class="ok">AI 확인됨</span>':'<span>AI 미확인</span>'}</div><img src="${ph.src}" alt="${esc(m.name)} 최근 사진">`
+    :`<span class="big">${esc(m.name)}</span>아직 올라온 사진이 없어요<br>먹고 나서 첫 사진을 올려 주세요`;
+  let actions="";
+  if(e) actions=`<div class="status">오늘 ${e.slot}으로 먹음 체크했어요</div><div class="actions"><button class="btn" data-a="uneat">먹음 체크 취소</button></div>`;
+  else if(so) actions=`<div class="actions"><button class="btn" data-a="restock">다시 있어요</button></div>`;
+  else if(slotOpen) actions=`<div class="panel"><h4>몇 시 끼니인가요? <small>하루 아침·점심·저녁 최대 3번</small></h4><div class="slotpick">${SLOTS.map(s=>{const u=slotUsed(s),um=u&&byId(u.id);return `<button class="btn${s===nowSlot()&&!u?" primary":""}" data-slot="${s}"${u?" disabled":""}>${s}${u?`<small>${esc(um?um.name:"")}</small>`:""}</button>`}).join("")}</div><button class="btn" data-a="slotcancel">취소</button></div>`;
+  else if(tm.length>=3) actions=`<div class="status bad">오늘은 아침·점심·저녁 먹음 체크를 모두 했어요</div>${st.plans[m.id]?"":`<div class="actions"><button class="btn ticket" data-a="pick">먹을래요</button></div>`}`;
+  else actions=`<div class="actions">${st.plans[m.id]?`<button class="btn" data-a="unpick">예정 취소</button>`:`<button class="btn ticket" data-a="pick">먹을래요</button>`}<button class="btn primary" data-a="eat">먹음 체크<small>오늘 ${tm.length}/3</small></button></div>`;
+  const photoBtn=!e?`<button class="btn" disabled>메뉴 사진 올리기<small>먹음 체크 후 가능</small></button>`:rp?`<button class="btn" disabled>최근 사진이 있어요 (${ago(rp.at)})</button>`
+    :`<label class="btn">${b==="photo"?"AI가 확인 중…":"메뉴 사진 올리기"}<input type="file" accept="image/*" data-a="photo"${b?" disabled":""}></label>`;
+  const soldBtn=so?"":`<label class="btn warn">${b==="sold"?"AI가 확인 중…":"품절 제보 (사진 필요)"}<input type="file" accept="image/*" data-a="soldphoto"${b?" disabled":""}></label>`;
+  const nb=n=>`<div><b>${n.kcal}</b><span>kcal</span></div><div><b>${n.protein}g</b><span>단백질</span></div><div><b>${n.carbs}g</b><span>탄수화물</span></div><div><b>${n.sugar}g</b><span>당</span></div>`;
+  const mineR=st.mine[m.id];
+  const rvs=[...(mineR?[{s:mineR.s,t:mineR.t,f:mineR.f,who:"나",at:mineR.at,v:mineR.verified}]:[]),...(SEED_RV[m.id]||[]).map(x=>({...x,at:Date.now()-x.d*DAY}))];
+  $("#detail-body").innerHTML=`<div class="${so?"sold":""}" style="display:flex;flex-direction:column;gap:16px">
+    <div class="hero">${hero}</div>
+    <div class="dname"><h3>${esc(m.name)}</h3><span class="price">${won(m.price)}</span></div>
+    ${m.off>0?`<div class="meta">밖에서 사 먹으면 약 ${won(m.market)} · <span class="pill ok">${m.off}% 저렴</span></div>`:""}
+    <div class="meta">${so?`<span class="pill sold">품절 · ${ago(so.at)} ${esc(so.who)} 제보${so.verified?" · 사진 확인됨":""}</span>`:""}${r.n?`<span class="s">${stars(Math.round(r.avg))}</span> ${r.avg.toFixed(1)} · 평가 ${r.n}개`:"아직 평가가 없어요"} · 이번 주 ${weekSales(m.id)}그릇 · ${m.tags.map(t=>"#"+t).join(" ")}</div>
+    ${so&&so.proof?`<div class="proof"><img src="${so.proof}" alt="품절 제보 사진"><span>제보 사진 · ${esc(so.reason||"")}</span></div>`:""}
+    ${b?`<div class="status">AI가 사진을 확인하고 있어요…</div>`:""}
+    ${lastMsg&&lastMsg.id===m.id?`<div class="status ${lastMsg.bad?"bad":""}">${esc(lastMsg.text)}</div>`:""}
+    ${actions}
+    <div class="actions">${photoBtn}${soldBtn}</div>
+    <span class="hint" style="margin-top:-8px">품절 표시는 사진으로 확인된 제보만 올라가고, 매일 19시에 초기화돼요.</span>
+    <div class="panel"><h4>1인분 영양성분 <small>메뉴 이름 기준 추정</small></h4><div class="nutri">${nb(m.n)}</div>
+      ${ph&&ph.nutrition?`<span class="nrow">최근 사진 기준 (${esc(ph.portion||"보통")} 양): ${ph.nutrition.kcal}kcal · 단백질 ${ph.nutrition.protein}g · 탄수화물 ${ph.nutrition.carbs}g · 당 ${ph.nutrition.sugar}g</span>`:`<span class="nrow">사진이 올라오면 AI가 실제 양을 보고 다시 추정해요.</span>`}</div>
+    ${AI_LINE[m.id]?`<div class="panel ai"><em>AI 한줄평</em>${AI_LINE[m.id]}</div>`:""}
+    <div class="panel"><h4>${mineR?"내 평가 수정":"별점과 코멘트 남기기"} <small>${e?"오늘 먹음 체크해서 '먹음 인증'으로 표시돼요":"전에 먹어 본 기억으로도 남길 수 있어요"}</small></h4>
+      <div class="stars">${[1,2,3,4,5].map(n=>`<button type="button" data-star="${n}" class="${n<=draft.s?"on":""}" aria-label="${n}점">★</button>`).join("")}</div>
+      <span class="hint">별점만 눌러도 등록돼요. 아래는 모두 선택이에요.</span>
+      ${QUICK.filter(q=>!q.only||q.only(m)).map(q=>`<div class="qrow"><span class="ql">${q.label}</span><div class="qopts">${(q.optsFor?q.optsFor(m):q.opts).map(o=>`<button type="button" data-q="${q.k}" data-qv="${o}" aria-pressed="${draft.f[q.k]===o}">${o}</button>`).join("")}</div></div>`).join("")}
+      <label for="rv-text" class="hint">한 줄 코멘트 (선택)</label>
+      <textarea id="rv-text" placeholder="예) 양 많고 고기 넉넉함. 국은 조금 짜요">${esc(draft.t)}</textarea>
+      <button class="btn primary" data-a="submit">${mineR?"수정하기":"등록하기"}</button></div>
+    <div class="panel"><h4>후기 ${rvs.length}개</h4>${rvs.length?`<div class="reviews">${rvs.map(x=>`<div class="rv"><span class="s">${stars(x.s)}</span>${x.t?`<span>${esc(x.t)}</span>`:""}${fText(x.f)?`<span class="qsum">${esc(fText(x.f))}</span>`:""}<small>${esc(x.who)} · ${ago(x.at)}${x.v?' · <span class="pill ok">먹음 인증</span>':""}</small></div>`).join("")}</div>`:`<span class="hint">첫 후기를 남겨 주세요</span>`}</div>
+  </div>`;
+}
+function openDetail(id){openId=id;slotOpen=false;const mine=st.mine[id];draft={s:mine?mine.s:0,t:mine?mine.t:"",f:Object.assign({},mine&&mine.f||{},mine&&mine.portion&&!(mine.f&&mine.f.portion)?{portion:mine.portion}:{})};if(lastMsg&&lastMsg.id!==id)lastMsg=null;renderDetail();const dl=$("#detail");if(!dl.open)dl.showModal();dl.scrollTop=0}
+// ── 학식 이상형 월드컵 ──
+let wc=null,wcTheme="fav";
+const THEMES={
+ fav:{short:"최애",title:"나의 최애 메뉴는?",sub:"그냥 제일 좋아하는 메뉴",q:"둘 중 더 좋아하는 메뉴는?",win:"나의 최애 메뉴"},
+ lunch:{short:"평생 점심",title:"평생 점심 메뉴 하나만 고른다면?",sub:"졸업할 때까지 매일 이것만",q:"앞으로 매일 점심으로 이것만 먹어야 한다면?",win:"나의 평생 점심 메뉴"},
+ fresh:{short:"신입생 추천",title:"신입생에게 딱 하나 추천한다면?",sub:"다래락 처음 온 후배에게",q:"다래락에 처음 온 신입생에게 추천할 메뉴는?",win:"내가 추천하는 신입생 메뉴"},
+ hungry:{short:"배고플 때",title:"너무 배고플 때 먹을 메뉴 하나!",sub:"4연강 끝나고 쓰러지기 직전",q:"배고파 쓰러지기 직전, 딱 하나만 먹을 수 있다면?",win:"배고플 때 나를 살린 메뉴"}
+};
+if(!st.wcReset2){st.wc={byTheme:{},history:[]};st.wcReset2=true}
+const wcStats=t=>(st.wc.byTheme[t]=st.wc.byTheme[t]||{});
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const roundName=n=>n===2?"결승":n+"강";
+function startWC(theme){wc={theme,round:shuffle(MENUS.filter(m=>m.price>1000).map(m=>m.id)).slice(0,16),next:[],i:0,champ:null,log:[]};showSplash();renderWC();const d=$("#wc");if(!d.open)d.showModal()}
+function wcCard(id,k){const m=byId(id),ph=st.photos[id],r=rate(id,"all");
+  return `<button class="wcc" data-wcpick="${k}"><span class="wci">${ph?`<img src="${ph.src}" alt="">`:esc(m.name[0])}</span><b>${esc(m.name)}</b><small>${won(m.price)} · ${m.cat}</small><small>${m.tags.map(t=>"#"+t).join(" ")}</small>${r.n?`<small>★ ${r.avg.toFixed(1)}</small>`:""}</button>`}
+function renderWC(){
+  if(!wc)return;
+  const T=THEMES[wc.theme];
+  if(wc.champ){const m=byId(wc.champ),sc=wcStats(wc.theme)[m.id]||{};
+    $("#wc-round").textContent="우승";
+    $("#wc-body").innerHTML=`<div class="wcwin"><span class="eyebrow2">${T.win}</span><span class="wcwn">${esc(m.name)}</span><span>${won(m.price)} · ${m.tags.map(t=>"#"+t).join(" ")}</span><span class="hint">「${T.title}」 누적 우승 ${sc.champ||0}회</span>
+      <div class="actions"><button class="btn primary" data-open="${m.id}">메뉴 보기</button><button class="btn" data-wcstart="${wc.theme}">다시 하기</button></div></div>`;return}
+  const n=wc.round.length,a=wc.round[wc.i],b=wc.round[wc.i+1];
+  $("#wc-round").textContent=T.title;
+  const steps=[16,8,4,2].map(r=>`<span class="${r===n?"now":r>n?"done":""}">${roundName(r)}</span>`).join("");
+  if(wc.splash){
+    $("#wc-body").innerHTML=`<div class="wcsplash" data-r="${n}"><span class="wcsteps">${steps}</span><span class="sbig">${roundName(n)}</span><span class="ssub">${({16:"다래락 대표 16개 메뉴 입장!",8:"8개 메뉴가 살아남았어요",4:"준결승! 이제 4개뿐이에요",2:"결승전! 최후의 한 그릇은?"})[n]}</span><div class="wcleft">${wc.round.map(id=>`<span>${esc(byId(id).name)}</span>`).join("")}</div></div>`;
+    return;
+  }
+  $("#wc-body").innerHTML=`<div class="wchead" data-r="${n}"><span class="wcsteps">${steps}</span><span class="wcbig">${roundName(n)}</span>${n===2?`<span class="wccount">마지막 대결</span>`:`<span class="wcdots" aria-label="${n/2}경기 중 ${wc.i/2+1}번째">${Array.from({length:n/2},(_,j)=>`<i class="${j<wc.i/2?"d":j===wc.i/2?"c":""}"></i>`).join("")}</span>`}</div><p class="wcq">${T.q}</p><div class="wcpair">${wcCard(a,0)}<span class="vs">VS</span>${wcCard(b,1)}</div><div class="wcprog"><i style="width:${Math.round(({16:0,8:8,4:12,2:14}[n]+wc.i/2)/15*100)}%"></i></div>`;
+}
+function showSplash(){wc.splash=true;const me=wc;clearTimeout(showSplash.t);showSplash.t=setTimeout(()=>{if(wc===me){wc.splash=false;renderWC()}},1600)}
+function pickWC(k){if(wc.splash)return;
+  const w=wc.round[wc.i+k],l=wc.round[wc.i+1-k];
+  wc.log.push([w,l]);wc.next.push(w);wc.i+=2;
+  if(wc.i>=wc.round.length){
+    if(wc.next.length===1){
+      // 결승까지 끝낸 판만 기록에 남김
+      const S=wcStats(wc.theme);
+      wc.log.forEach(([a,b])=>{S[a]=S[a]||{w:0,l:0,champ:0};S[b]=S[b]||{w:0,l:0,champ:0};S[a].w++;S[b].l++});
+      wc.champ=w;S[w].champ++;st.wc.history.push({at:Date.now(),winner:w,theme:wc.theme});API.wc(wc.theme,w,wc.log);save();renderRank();
+    } else {wc.round=wc.next;wc.next=[];wc.i=0;showSplash()}
+  }
+  renderWC();
+}
+function render(){purgeSold();renderSlotbar();renderCats();renderMenus();renderReco();renderTaste();renderRank();renderDetail()}
+
+// ── 이벤트 ──
+$("#detail-close").addEventListener("click",()=>$("#detail").close());
+$("#detail").addEventListener("close",()=>{openId=null});
+$("#detail").addEventListener("input",e=>{if(e.target.id==="rv-text")draft.t=e.target.value});
+document.addEventListener("click",e=>{
+  const wst=e.target.closest("[data-wcstart]");if(wst){startWC(wst.dataset.wcstart||"fav");return}
+  if(e.target.closest(".wcsplash")&&wc){wc.splash=false;renderWC();return}
+  const wr=e.target.closest("[data-wcrank]");if(wr){wcTheme=wr.dataset.wcrank;renderRank();return}
+  if(e.target.closest("[data-wcclose]")){$("#wc").close();return}
+  const wp=e.target.closest("[data-wcpick]");if(wp&&wc&&!wc.champ){pickWC(+wp.dataset.wcpick);return}
+  const op=e.target.closest("#wc [data-open]");if(op){$("#wc").close();openDetail(op.dataset.open);return}
+  const o=e.target.closest("[data-open]");if(o){openDetail(o.dataset.open);return}
+  const c=e.target.closest("[data-c]");if(c){cat=c.dataset.c;render();return}
+  const so=e.target.closest("[data-sort]");if(so){sortBy=so.dataset.sort;renderMenus();return}
+  const g=e.target.closest("[data-goal]");if(g){goal=g.dataset.goal;renderReco();return}
+  const rk=e.target.closest("[data-rank]");if(rk){rankScope=rk.dataset.rank;renderRank();return}
+  const v=e.target.closest("[data-view]");if(v){show(v.dataset.view);return}
+  const s=e.target.closest("[data-star]");if(s){draft.s=+s.dataset.star;renderDetail();return}
+  const qb=e.target.closest("[data-q]");if(qb){const k=qb.dataset.q,v=qb.dataset.qv;if(draft.f[k]===v)delete draft.f[k];else draft.f[k]=v;renderDetail();return}
+  const vt=e.target.closest("[data-vote]");if(vt){const k=wkKey()+"|"+vt.dataset.id,v=+vt.dataset.vote;if(st.votes[k]===v)delete st.votes[k];else st.votes[k]=v;API.vote(k,st.votes[k]);save();renderReco();toast(st.votes[k]?(v>0?"추천했어요":"비추천했어요")+". 다음 주 랭킹에 반영돼요":"투표를 취소했어요");return}
+  const sl=e.target.closest("[data-slot]");if(sl&&openId){
+    if(todayMeals().length>=3||slotUsed(sl.dataset.slot)){toast("이미 체크한 끼니예요");return}
+    st.meals.push({id:openId,slot:sl.dataset.slot,at:Date.now()});API.eat(openId,sl.dataset.slot);delete st.plans[openId];slotOpen=false;
+    if(st.mine[openId])st.mine[openId].verified=true;
+    toast(`${sl.dataset.slot} 먹음 체크 완료. 사진도 올릴 수 있어요`);save();render();return}
+  const b=e.target.closest("button[data-a]");if(!b||!openId)return;const id=openId,a=b.dataset.a;
+  if(a==="eat"){slotOpen=true;renderDetail();return}
+  if(a==="slotcancel"){slotOpen=false;renderDetail();return}
+  if(a==="pick"){st.plans[id]=Date.now();toast("먹을 예정에 담았어요")}
+  if(a==="unpick"){delete st.plans[id];toast("예정을 취소했어요")}
+  if(a==="uneat"){const x=eatenToday(id);st.meals=st.meals.filter(y=>y!==x);API.uneat(id);if(st.mine[id])st.mine[id].verified=false;toast("먹음 체크를 취소했어요")}
+  if(a==="restock"){delete st.sold[id];API.restock(id);toast("다시 있음으로 바꿨어요")}
+  if(a==="submit"){if(!draft.s){toast("별점을 골라 주세요");return}st.mine[id]={s:draft.s,t:draft.t.trim(),f:{...draft.f},at:Date.now(),verified:!!eatenToday(id)};API.review(id,st.mine[id]);toast("평가를 등록했어요")}
+  save();render();
+});
+document.addEventListener("change",async e=>{
+  const inp=e.target;if(!openId||!inp.files||!inp.files[0])return;const file=inp.files[0],id=openId,m=byId(id),a=inp.dataset.a;
+  if(a!=="photo"&&a!=="soldphoto")return;
+  busy[id]=a==="photo"?"photo":"sold";lastMsg=null;renderDetail();
+  try{
+    const src=await shrink(file);
+    if(a==="photo"){
+      const r=await aiCheckFood(file,m);
+      if(r.skipped){st.photos[id]={src,at:Date.now(),verified:false};lastMsg={id,text:"지금은 AI 확인이 어려워 미확인 사진으로 올렸어요."}}
+      else if(r.match===true){
+        const n=r.nutrition&&typeof r.nutrition.kcal==="number"?{kcal:Math.round(r.nutrition.kcal),protein:Math.round(r.nutrition.protein||0),carbs:Math.round(r.nutrition.carbs||0),sugar:Math.round(r.nutrition.sugar||0)}:null;
+        st.photos[id]={src,at:Date.now(),verified:true,nutrition:n,portion:r.portion};lastMsg={id,text:"사진이 등록됐어요. "+(r.reason||"")};
+      } else lastMsg={id,bad:true,text:`등록할 수 없어요. ${r.reason||m.name+" 사진이 아닌 것 같아요."}`};
+    } else {
+      const r=await aiCheckSold(file,m);
+      if(r.skipped){st.sold[id]={at:Date.now(),who:"나",verified:false,proof:src,reason:"AI 미확인"};lastMsg={id,text:"이 화면에서는 AI 확인을 쓸 수 없어 미확인 제보로 등록했어요."}}
+      else if(r.ok===true){st.sold[id]={at:Date.now(),who:"나",verified:true,proof:src,reason:r.reason||""};lastMsg={id,text:"품절 제보가 확인됐어요."}}
+      else lastMsg={id,bad:true,text:`품절을 확인할 수 없어요. ${r.reason||"키오스크에서 이 메뉴의 품절 표시가 보이게 찍어 주세요."}`};
+    }
+  }catch(err){
+    // AI 확인을 못 해도 사진은 '미확인'으로 올림 (거절된 경우만 제외)
+    if(err&&err.code==="image_rejected"){lastMsg={id,bad:true,text:aiErr(err)}}
+    else{
+      try{const src=await shrink(file);
+        if(a==="photo"){st.photos[id]={src,at:Date.now(),verified:false};lastMsg={id,text:"AI 확인 없이 미확인 사진으로 올렸어요. ("+aiErr(err)+")"}}
+        else{st.sold[id]={at:Date.now(),who:"나",verified:false,proof:src,reason:"AI 미확인"};lastMsg={id,text:"AI 확인 없이 미확인 제보로 등록했어요. ("+aiErr(err)+")"}}
+      }catch(e2){lastMsg={id,bad:true,text:"사진을 읽지 못했어요. 다른 사진을 골라 주세요"}}
+    }
+  }
+  delete busy[id];inp.value="";save();render();
+});
+function show(v){
+  ["menu","reco","taste","rank"].forEach(k=>$("#view-"+k).hidden=k!==v);
+  document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.view===v));
+  window.scrollTo(0,0);
+}
+save();render();
+</script>
+<script src="sync.js"></script>
+
+</body></html>
