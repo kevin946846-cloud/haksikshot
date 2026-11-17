@@ -1,23 +1,23 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>학식샷</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap">
 <style>
 /* Layout: phone-width app; each tab has its own format — kiosk grid (메뉴), goal board (추천), taste profile (내 입맛), leaderboard (랭킹) */
 :root{
-  --bg:#eef2ef; --surface:#ffffff; --ink:#18221e; --muted:#5d6b65; --line:#d5ddd8;
-  --accent:#1f6b52; --accent-soft:#dcefe6; --ticket:#ffd84d; --ticket-ink:#3a2f00; --star:#e8a317;
+  --bg:#faf7f2; --surface:#ffffff; --ink:#1f1b16; --muted:#6b635a; --line:#e7e1d8;
+  --accent:#b54a17; --accent-soft:#f8e7dc; --ticket:#ffd84d; --ticket-ink:#3a2f00; --star:#e8a317;
   --sold:#b4322a; --sold-soft:#f8e1de; --diet:#2e7bbf; --diet-soft:#dfecf8; --bulk:#c4581f; --bulk-soft:#f9e4d6; --value:#6b4fb3; --value-soft:#e9e3f7;
-  --display:"Do Hyeon","Noto Sans KR",system-ui,sans-serif;
+  --display:"Jua","Noto Sans KR",system-ui,sans-serif;
   --body:"Noto Sans KR",system-ui,-apple-system,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#121815; --surface:#1b2420; --ink:#e7eeea; --muted:#9aaba3; --line:#2c3833;
-  --accent:#5cc49c; --accent-soft:#1f3a2f; --ticket:#e6c23c; --ticket-ink:#2a2200; --star:#f2b938;
+  --bg:#171411; --surface:#211c18; --ink:#efe9e2; --muted:#a89e93; --line:#3a332c;
+  --accent:#ee9466; --accent-soft:#3a2418; --ticket:#e6c23c; --ticket-ink:#2a2200; --star:#f2b938;
   --sold:#f08a80; --sold-soft:#3a1f1c; --diet:#7db7ea; --diet-soft:#1c2c3b; --bulk:#f0915a; --bulk-soft:#3a2518; --value:#b4a0ee; --value-soft:#2a2340; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#121815; --surface:#1b2420; --ink:#e7eeea; --muted:#9aaba3; --line:#2c3833;
-  --accent:#5cc49c; --accent-soft:#1f3a2f; --ticket:#e6c23c; --ticket-ink:#2a2200; --star:#f2b938;
+  --bg:#171411; --surface:#211c18; --ink:#efe9e2; --muted:#a89e93; --line:#3a332c;
+  --accent:#ee9466; --accent-soft:#3a2418; --ticket:#e6c23c; --ticket-ink:#2a2200; --star:#f2b938;
   --sold:#f08a80; --sold-soft:#3a1f1c; --diet:#7db7ea; --diet-soft:#1c2c3b; --bulk:#f0915a; --bulk-soft:#3a2518; --value:#b4a0ee; --value-soft:#2a2340; color-scheme:dark}
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -43,17 +43,35 @@ h2{font-family:var(--display);font-weight:400;font-size:22px;margin:4px 0 0;text
 .cat small{font-family:var(--body);font-size:12px;margin-left:4px}
 .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 @media (max-width:340px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.tile{position:relative;font:inherit;color:var(--ink);text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 6px 8px;display:flex;flex-direction:column;gap:2px;cursor:pointer;min-width:0}
-.tt{height:60px;border-radius:8px;overflow:hidden;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:24px;color:var(--accent);margin-bottom:4px}
+.tile{position:relative;font:inherit;color:var(--ink);text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 6px 8px;display:flex;flex-direction:column;gap:2px;cursor:pointer;min-width:0;overflow:hidden}
+.tno{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);letter-spacing:.4px;margin-bottom:3px}
+.perf{position:relative;border-top:2px dashed var(--line);margin:4px 2px 6px}
+.perf::before,.perf::after{content:"";position:absolute;top:-8px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:1px solid var(--line)}
+.perf::before{left:-16px}.perf::after{right:-16px}
+.tt{height:56px;border-radius:6px;overflow:hidden;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:24px;color:var(--accent);margin-bottom:4px}
 .tt img{width:100%;height:100%;object-fit:cover;display:block}
 .tn{font-weight:700;font-size:13px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em;word-break:keep-all}
-.tp{font-size:12.5px;font-variant-numeric:tabular-nums;font-weight:500}
+.tp{font-family:var(--display);font-size:16px;font-variant-numeric:tabular-nums}
 .tr{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
 .tr b{color:var(--star);font-weight:400}
-.badge{position:absolute;top:10px;left:10px;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px}
-.badge.sold{background:var(--sold);color:var(--surface)}
-.badge.plan{background:var(--ticket);color:var(--ticket-ink)}
-.badge.done{background:var(--accent);color:var(--surface)}
+.badge{position:absolute;top:36px;left:50%;transform:translateX(-50%) rotate(-10deg);font-family:var(--display);font-size:14px;line-height:1.3;padding:0 8px;border:2px solid;border-radius:6px;background:var(--surface);white-space:nowrap;z-index:1}
+.badge.sold{color:var(--sold);border-color:var(--sold)}
+.badge.plan{background:var(--ticket);color:var(--ticket-ink);border-color:var(--ticket);transform:translateX(-50%) rotate(6deg)}
+.badge.done{color:var(--accent);border-color:var(--accent);border-radius:999px;transform:translateX(-50%) rotate(8deg)}
+/* ── 히어로 ── */
+.mhero{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 18px 18px;display:flex;flex-direction:column;gap:12px}
+.mhero h2{font-size:36px;line-height:1.15;margin:0}
+.mhero h2 mark{background:linear-gradient(transparent 62%,var(--ticket) 62%);color:inherit}
+.mhero p{margin:0;font-size:15px;line-height:1.6;color:var(--ink);opacity:.85;word-break:keep-all}
+.mhero .mstamp{position:absolute;top:18px;right:16px;transform:rotate(8deg);border:2px solid var(--accent);color:var(--accent);border-radius:999px;padding:3px 10px;font-family:var(--display);font-size:14px}
+.mhero .btn{flex:none;text-decoration:none;min-height:48px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.ticketbar{display:flex;background:var(--ticket);color:var(--ticket-ink);border-radius:14px;overflow:hidden}
+.ticketbar .tc{flex:1;font:inherit;color:inherit;background:none;border:0;padding:10px 4px;min-height:56px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+.ticketbar .tc small{font-size:12px}.ticketbar .tc b{font-family:var(--display);font-weight:400;font-size:22px;line-height:1.1}
+.ticketbar .tc[aria-pressed="true"] small{font-weight:700;text-decoration:underline}
+.ticketbar .cut{border-left:2px dashed rgba(58,47,0,.35);margin:10px 0}
+.ticketbar .so{width:84px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ticketbar .so small{font-size:12px}.ticketbar .so b{font-family:var(--display);font-weight:400;font-size:20px;line-height:1.1}
 .tile.sold{background:var(--bg)}
 .tile.sold .tt{filter:grayscale(1);opacity:.55}
 .tile.sold .tn,.tile.sold .tp{color:var(--muted)}
@@ -268,6 +286,13 @@ nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:
   <p class="proto">베타 버전이에요. 메뉴·가격은 다래락 키오스크 기준이고, 영양성분과 시중가는 추정치예요.</p>
 
   <section id="view-menu" class="view" aria-label="메뉴">
+    <div class="mhero">
+      <span class="mstamp" aria-hidden="true">먹음 인증</span>
+      <h2>오늘 <mark>뭐 먹지?</mark></h2>
+      <p>다래락 키오스크엔 사진이 없잖아요.<br>그래서 먹은 사람이 찍어서 올려요.</p>
+      <a class="btn primary" href="#cats">메뉴 구경하기</a>
+    </div>
+    <div class="ticketbar" id="ticketbar" aria-label="오늘 메뉴 식권"></div>
     <div class="slotbar" id="slotbar"></div>
     <div class="cats" role="tablist" id="cats"></div>
     <div class="sortbar" id="sortbar"></div>
@@ -485,10 +510,11 @@ function renderSlotbar(){
   $("#slotbar").innerHTML=`오늘 먹음 체크 ${tm.length}/3`+SLOTS.map(s=>`<span class="sl${slotUsed(s)?" on":""}">${s}</span>`).join("");
 }
 function renderCats(){$("#cats").innerHTML=["일품","양식","분식"].map(c=>{const all=MENUS.filter(m=>m.cat===c),n=all.filter(avail).length;return `<button class="cat" role="tab" aria-selected="${c===cat}" data-c="${c}">${c}<small>${n}/${all.length}</small></button>`}).join("")}
+function renderTicketbar(){const so=MENUS.filter(m=>!avail(m)).length;$("#ticketbar").innerHTML=["일품","양식","분식"].map(c=>`<button class="tc" data-c="${c}" aria-pressed="${c===cat}"><small>${c}</small><b>${MENUS.filter(m=>m.cat===c).length}</b></button>`).join("")+`<span class="cut" aria-hidden="true"></span><div class="so"><small>지금 품절</small><b>${so}</b></div>`}
 function tile(m){
   const ph=st.photos[m.id],so=st.sold[m.id],r=rate(m.id,"all"),e=eatenToday(m.id);
   const badge=so?'<span class="badge sold">품절</span>':e?`<span class="badge done">${e.slot}</span>`:st.plans[m.id]?'<span class="badge plan">예정</span>':"";
-  return `<button class="tile${so?" sold":""}" data-open="${m.id}">${badge}<span class="tt">${ph?`<img src="${ph.src}" alt="">`:esc(m.name[0])}</span><span class="tn">${esc(m.name)}</span><span class="tp">${won(m.price)}</span><span class="tr">${r.n?`<b>★</b> ${r.avg.toFixed(1)} (${r.n})`:"평가 없음"}</span></button>`;
+  return `<button class="tile${so?" sold":""}" data-open="${m.id}">${badge}<span class="tno"><span>${m.cat}</span><span>No.${m.id.slice(1).padStart(2,"0")}</span></span><span class="tt">${ph?`<img src="${ph.src}" alt="">`:esc(m.name[0])}</span><span class="perf" aria-hidden="true"></span><span class="tn">${esc(m.name)}</span><span class="tp">${won(m.price)}</span><span class="tr">${r.n?`<b>★</b> ${r.avg.toFixed(1)} (${r.n})`:"평가 없음"}</span></button>`;
 }
 function renderMenus(){
   const SORTS={low:["가격 낮은 순",(a,b)=>a.price-b.price],high:["가격 높은 순",(a,b)=>b.price-a.price],star:["별점 순",(a,b)=>{const x=rate(a.id,"all"),y=rate(b.id,"all");return (y.n?1:0)-(x.n?1:0)||y.avg-x.avg||y.n-x.n||a.price-b.price}]};
@@ -584,7 +610,7 @@ function renderDetail(){
   const mineR=st.mine[m.id];
   const rvs=[...(mineR?[{s:mineR.s,t:mineR.t,f:mineR.f,who:"나",at:mineR.at,v:mineR.verified}]:[]),...(SEED_RV[m.id]||[]).map(x=>({...x,at:Date.now()-x.d*DAY}))];
   $("#detail-body").innerHTML=`<div class="${so?"sold":""}" style="display:flex;flex-direction:column;gap:16px">
-    <div class="hero">${hero}</div>
+    <div class="mhero">${hero}</div>
     <div class="dname"><h3>${esc(m.name)}</h3><span class="price">${won(m.price)}</span></div>
     ${m.off>0?`<div class="meta">밖에서 사 먹으면 약 ${won(m.market)} · <span class="pill ok">${m.off}% 저렴</span></div>`:""}
     <div class="meta">${so?`<span class="pill sold">품절 · ${ago(so.at)} ${esc(so.who)} 제보${so.verified?" · 사진 확인됨":""}</span>`:""}${r.n?`<span class="s">${stars(Math.round(r.avg))}</span> ${r.avg.toFixed(1)} · 평가 ${r.n}개`:"아직 평가가 없어요"} · 이번 주 ${weekSales(m.id)}그릇 · ${m.tags.map(t=>"#"+t).join(" ")}</div>
@@ -653,7 +679,7 @@ function pickWC(k){if(wc.splash)return;
   }
   renderWC();
 }
-function render(){purgeSold();renderSlotbar();renderCats();renderMenus();renderReco();renderTaste();renderRank();renderDetail()}
+function render(){purgeSold();renderSlotbar();renderTicketbar();renderCats();renderMenus();renderReco();renderTaste();renderRank();renderDetail()}
 
 // ── 이벤트 ──
 $("#detail-close").addEventListener("click",()=>$("#detail").close());
