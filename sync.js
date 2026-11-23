@@ -17,8 +17,9 @@ const API = {
     return track(sb.from("meals").insert({ user_id: me, menu_id: id, slot }));
   },
   uneat: id => {
+    // 오늘(한국 날짜) 기록만 지움
     if (!me) { toast("로그인 세션을 불러오는 중이에요. 잠시 후 다시 시도해 주세요."); return Promise.resolve(); }
-    return track(sb.from("meals").delete().eq("user_id", me).eq("menu_id", id).eq("day", new Date(kDay0() + KST).toISOString().slice(0, 10))   // 오늘(한국 날짜) 기록만);
+    return track(sb.from("meals").delete().eq("user_id", me).eq("menu_id", id).eq("day", new Date(kDay0() + KST).toISOString().slice(0, 10)));
   },
   review: (id, r) => {
     if (!me) { toast("로그인 세션을 불러오는 중이에요. 잠시 후 다시 시도해 주세요."); return Promise.resolve(); }
