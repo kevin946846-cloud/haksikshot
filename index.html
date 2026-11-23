@@ -646,7 +646,7 @@ function renderDetail(){
       <label for="rv-text" class="hint">한 줄 코멘트 (선택)</label>
       <textarea id="rv-text" placeholder="예) 양 많고 고기 넉넉함. 국은 조금 짜요">${esc(draft.t)}</textarea>
       <button class="btn primary" data-a="submit">${mineR?"수정하기":"등록하기"}</button></div>
-    <div class="panel"><h4>후기 ${rvs.length}개</h4>${rvs.length?`<div class="reviews">${rvs.map(x=>`<div class="rv"><span class="s">${stars(x.s)}</span>${x.t?`<span>${esc(x.t)}</span>`:""}${fText(x.f)?`<span class="qsum">${esc(fText(x.f))}</span>`:""}<small>${esc(x.who)} · ${ago(x.at)}${x.v?' · <span class="pill ok">먹음 인증</span>':""}</small></div>`).join("")}</div>`:`<span class="hint">첫 후기를 남겨 주세요</span>`}</div>
+    <div class="panel"><h4>후기 ${Math.max(rvs.length,r.n)}개${r.n>rvs.length?` <small>최근 ${rvs.length}개 표시</small>`:""}</h4>${rvs.length?`<div class="reviews">${rvs.map(x=>`<div class="rv"><span class="s">${stars(x.s)}</span>${x.t?`<span>${esc(x.t)}</span>`:""}${fText(x.f)?`<span class="qsum">${esc(fText(x.f))}</span>`:""}<small>${esc(x.who)} · ${ago(x.at)}${x.v?' · <span class="pill ok">먹음 인증</span>':""}</small></div>`).join("")}</div>`:`<span class="hint">첫 후기를 남겨 주세요</span>`}</div>
   </div>`;
 }
 function openDetail(id){openId=id;slotOpen=false;const mine=st.mine[id];draft={s:mine?mine.s:0,t:mine?mine.t:"",f:Object.assign({},mine&&mine.f||{},mine&&mine.portion&&!(mine.f&&mine.f.portion)?{portion:mine.portion}:{})};if(lastMsg&&lastMsg.id!==id)lastMsg=null;renderDetail();const dl=$("#detail");if(!dl.open)dl.showModal();dl.scrollTop=0}
