@@ -54,18 +54,22 @@ async function hydrate() {
   await Promise.allSettled([...Q]);
   try {
     const now = Date.now(), t = x => new Date(x).getTime(), wks = [wkKey(), wkKey(now - 7 * DAY)];
+    // 평균·개수·승패는 DB 집계 함수로 계산해서 메뉴별 결과만 받음 (예전: 후기 3,000개·월드컵 1,500판을 통째로)
     const res = await Promise.all([
-      sb.from("reviews").select("user_id,menu_id,stars,body,feedback,verified,updated_at").order("updated_at", { ascending: false }).limit(3000),
+      sb.from("reviews").select("menu_id,stars,body,feedback,verified,updated_at").eq("user_id", me),   // 내 후기
+      sb.rpc("menu_rating"),                       // 남들 별점: 메뉴별 평균·개수
+      sb.rpc("recent_reviews", { p_per: 20 }),     // 남들 후기 글: 메뉴별 최근 20개
       sb.from("photos").select("*"),
       sb.from("sold").select("*").gte("created_at", new Date(lastReset()).toISOString()),
       sb.from("meals").select("menu_id,slot,created_at").eq("user_id", me).order("created_at", { ascending: false }).limit(200),
       sb.rpc("weekly_sales"),
-      sb.from("votes").select("user_id,week,menu_id,v").in("week", wks),
+      sb.from("votes").select("week,menu_id,v").eq("user_id", me).in("week", wks),   // 내 투표
+      sb.rpc("vote_counts", { p_weeks: wks }),     // 남들 투표: 주차·메뉴별 추천/비추천 수
       sb.from("rank_hist").select("week,ord").in("week", wks),
-      sb.from("wc_runs").select("theme,winner,log").order("id", { ascending: false }).limit(1500)]);
+      sb.rpc("wc_stats")]);                        // 월드컵: 테마·메뉴별 승/패/우승 수
     res.forEach(r => { if (r.error) throw r.error });
     const data = res.map(r => r.data || []);
-    const sig = JSON.stringify([...data.slice(0, 7), data[7].length, data[7][0]]);
+    const sig = JSON.stringify(data);
     if (sig === lastSig) return; lastSig = sig;
     saveSnap(data);
     applySnap(data);
@@ -73,8 +77,8 @@ async function hydrate() {
 }
 
 // ── 캐시: 마지막으로 받은 서버 데이터를 기기에 저장 → 다음에 열 때 네트워크를 기다리지 않고 바로 그림 ──
-const SNAP = "haksikshot-snap-v1";
-function saveSnap(data) { try { localStorage.setItem(SNAP, JSON.stringify({ me, at: Date.now(), data })) } catch (_) { } }
+const SNAP = "haksikshot-snap-v2";   // v2: 집계 결과 형식
+function saveSnap(data) { try { localStorage.removeItem("haksikshot-snap-v1"); localStorage.setItem(SNAP, JSON.stringify({ me, at: Date.now(), data })) } catch (_) { } }
 function loadSnap() {
   try {
     const s = JSON.parse(localStorage.getItem(SNAP) || "null");
@@ -83,20 +87,14 @@ function loadSnap() {
   return false;
 }
 
-function applySnap([rv, ph, so, ml, ws, vt, rh, wr]) {
+function applySnap([my, rt, rc, ph, so, ml, ws, mv, vc, rh, wcs]) {
   try {
     const now = Date.now(), t = x => new Date(x).getTime();
 
     st.mine = {}; Object.keys(SEED_RV).forEach(k => delete SEED_RV[k]); Object.keys(RATE).forEach(k => delete RATE[k]);
-    const acc = {};
-    rv.forEach(r => {
-      const at = t(r.updated_at), f = r.feedback || {};
-      if (r.user_id === me) { st.mine[r.menu_id] = { s: r.stars, t: r.body || "", f, at, verified: r.verified }; return }
-      (SEED_RV[r.menu_id] = SEED_RV[r.menu_id] || []).push({ s: r.stars, t: r.body || "", f, who: "익명", d: (now - at) / DAY, v: r.verified });
-      const a = acc[r.menu_id] = acc[r.menu_id] || { s: 0, n: 0, ws: 0, wn: 0 };
-      a.s += r.stars; a.n++; if (now - at < 7 * DAY) { a.ws += r.stars; a.wn++ }
-    });
-    Object.entries(acc).forEach(([id, a]) => RATE[id] = { all: [a.s / a.n, a.n], wk: [a.wn ? a.ws / a.wn : 0, a.wn] });
+    my.forEach(r => st.mine[r.menu_id] = { s: r.stars, t: r.body || "", f: r.feedback || {}, at: t(r.updated_at), verified: r.verified });
+    rc.forEach(r => (SEED_RV[r.menu_id] = SEED_RV[r.menu_id] || []).push({ s: r.stars, t: r.body || "", f: r.feedback || {}, who: "익명", d: (now - t(r.updated_at)) / DAY, v: r.verified }));
+    rt.forEach(r => RATE[r.menu_id] = { all: [Number(r.avg_all), r.n_all], wk: [Number(r.avg_wk), r.n_wk] });
 
     st.photos = {}; ph.forEach(r => st.photos[r.menu_id] = { src: pub(r.path), at: t(r.created_at), verified: r.verified, nutrition: r.nutrition, portion: r.portion });
     st.sold = {}; so.forEach(r => st.sold[r.menu_id] = { at: t(r.created_at), who: r.reported_by === me ? "나" : "익명", verified: r.verified, proof: pub(r.proof_path), reason: r.reason || "" });
@@ -105,15 +103,12 @@ function applySnap([rv, ph, so, ml, ws, vt, rh, wr]) {
     ws.forEach(r => SALES[r.menu_id] = Number(r.n) - st.meals.filter(x => x.id === r.menu_id && now - x.at < 7 * DAY).length);
 
     st.votes = {}; AGG.votes = {};
-    vt.forEach(r => { const k = r.week + "|" + r.menu_id; if (r.user_id === me) st.votes[k] = r.v; else { const a = AGG.votes[k] = AGG.votes[k] || { up: 0, down: 0 }; r.v === 1 ? a.up++ : a.down++ } });
+    mv.forEach(r => st.votes[r.week + "|" + r.menu_id] = r.v);
+    vc.forEach(r => AGG.votes[r.week + "|" + r.menu_id] = { up: r.up, down: r.down });
     st.rankHist = {}; rh.forEach(r => st.rankHist[r.week] = r.ord);
 
     st.wc.byTheme = {}; st.wc.history = [];
-    wr.forEach(r => {
-      const S = wcStats(r.theme);
-      (r.log || []).forEach(([a, b]) => { S[a] = S[a] || { w: 0, l: 0, champ: 0 }; S[b] = S[b] || { w: 0, l: 0, champ: 0 }; S[a].w++; S[b].l++ });
-      S[r.winner] = S[r.winner] || { w: 0, l: 0, champ: 0 }; S[r.winner].champ++;
-    });
+    wcs.forEach(r => wcStats(r.theme)[r.menu_id] = { w: r.w, l: r.l, champ: r.champ });
     if (document.activeElement && document.activeElement.tagName === "TEXTAREA") { pendingRender = true; return }
     render();
   } catch (e) { console.error(e); lastSig = ""; if (!hydrate.warned) { hydrate.warned = true; toast("서버에서 데이터를 불러오지 못했어요") } }
