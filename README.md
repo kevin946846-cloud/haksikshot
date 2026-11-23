@@ -31,6 +31,30 @@ supabase/functions/verify-photo      사진·품절 제보 AI 확인 (서버에�
    ```
 6. **Vercel 배포**: vercel.com > Add New Project > 위 저장소 Import > Framework `Other` > Deploy. 이후 `git push`마다 자동 배포됩니다.
 
+## 도커로 실행하기 (다른 컴퓨터에서 바로 띄우기)
+
+Docker만 설치돼 있으면 Node나 다른 도구 없이 같은 화면이 뜹니다. 데이터는 Supabase 클라우드를 그대로 쓰므로 인터넷 연결이 필요합니다.
+
+```bash
+git clone https://github.com/kevin946846-cloud/haksikshot.git
+cd haksikshot
+docker compose up -d --build
+# 브라우저에서 http://localhost:8080
+```
+
+- 끄기: `docker compose down`
+- 다른 Supabase 프로젝트로 띄우기: `docker-compose.yml`의 `SUPABASE_URL`, `SUPABASE_ANON_KEY` 주석을 풀고 값 입력 (공개 anon 키만)
+- GitHub Actions(`.github/workflows/docker.yml`)가 push마다 깨끗한 환경에서 이미지 빌드 → 실행 → 응답 확인을 자동으로 합니다
+
+## 성능: 캐시와 인덱스
+
+| 무엇 | 어디에 | 효과 |
+| --- | --- | --- |
+| 마지막으로 받은 데이터 캐시 | 브라우저 localStorage (`haksikshot-snap-v1`) | 앱을 다시 열면 네트워크를 기다리지 않고 바로 그림, 그 뒤 새 데이터로 교체 |
+| 스크립트 캐시 | `vercel.json`, `docker/nginx.conf` | `sync.js`·`config.js`는 10분 캐시, `index.html`은 항상 새 버전 확인 |
+| 백그라운드 탭 | `sync.js` | 탭이 안 보일 때는 30초마다 다시 받지 않음 |
+| DB 인덱스 | `supabase/perf-2026-11-23.sql` | 주간 집계(meals.created_at), 투표(votes.week), 품절·사진(created_at) |
+
 ## 서버가 지키는 규칙
 - 하루 3끼, 같은 메뉴 하루 1번 (DB 제약) / 1인 1메뉴 1평가
 - '먹음 인증' 표시는 서버가 계산 (먹음 체크한 메뉴의 후기만)

@@ -8,27 +8,32 @@ const num = (v: unknown, max = 3000) => Math.max(0, Math.min(max, Math.round(Num
 async function ask(prompt: string, b64: string) {
   const key = Deno.env.get("GEMINI_API_KEY");
   if (!key) return null;
-  const model = Deno.env.get("GEMINI_MODEL") ?? "gemini-2.5-flash";   // 모델명이 바뀌면 secret으로 교체
-  // 전체 19초 안에 끝냄(화면은 25초에 풀림). 503(과부하)·429로 빨리 실패하면 남은 시간으로 한 번 더, 실패하면 '미확인'
+  // 설정한 모델(GEMINI_MODEL)이 느리거나 과부하면 대체 모델로. 전체 19초 안에 끝냄(화면은 25초에 풀림), 다 실패하면 '미확인'
+  const models = [...new Set([Deno.env.get("GEMINI_MODEL"), Deno.env.get("GEMINI_FALLBACK_MODEL") ?? "gemini-3.6-flash"].filter(Boolean))] as string[];
   const deadline = Date.now() + 19_000;
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    const left = deadline - Date.now();
+  for (let attempt = 1; attempt <= models.length; attempt++) {
+    const model = models[attempt - 1], left = deadline - Date.now();
     if (left < 4_000) break;
+    const t0 = Date.now();
     try {
       const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: "POST",
-        signal: AbortSignal.timeout(left),
+        signal: AbortSignal.timeout(attempt < models.length ? Math.min(left, 9_000) : left),
         headers: { "Content-Type": "application/json", "x-goog-api-key": key },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: b64 } }] }],
-          generationConfig: { responseMimeType: "application/json" },
+          // 사진 한 장 판정은 깊은 추론이 필요 없음 → thinkingLevel low로 응답 시간 단축
+          generationConfig: { responseMimeType: "application/json", thinkingConfig: { thinkingLevel: "low" } },
         }),
       });
-      if (r.ok) return JSON.parse((await r.json()).candidates[0].content.parts[0].text);
-      console.error("gemini", model, attempt, r.status, (await r.text()).slice(0, 200));
-      if (r.status !== 503 && r.status !== 429) return null;
-    } catch (e) { console.error("gemini", model, attempt, String(e)); }
-    if (attempt === 1) await new Promise((res) => setTimeout(res, 1000));
+      if (r.ok) {
+        const out = JSON.parse((await r.json()).candidates[0].content.parts[0].text);
+        console.log("gemini ok", model, Date.now() - t0, "ms");
+        return out;
+      }
+      console.error("gemini", model, r.status, Date.now() - t0, "ms", (await r.text()).slice(0, 200));
+      if (![404, 429, 500, 503].includes(r.status)) return null;   // 그 외(키 오류 등)는 다른 모델도 같으므로 중단
+    } catch (e) { console.error("gemini", model, String(e), Date.now() - t0, "ms"); }
   }
   return null;
 }
