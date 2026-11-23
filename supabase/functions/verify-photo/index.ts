@@ -1,9 +1,33 @@
 // 사진/품절 제보 검증: 규칙 확인 → AI 판정 → 저장. 보는 사람의 계정과 무관하게 서버가 처리.
 import { createClient } from "npm:@supabase/supabase-js@2";
+declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void };
 
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const J = (b: unknown) => new Response(JSON.stringify(b), { headers: { ...cors, "Content-Type": "application/json" } });
 const num = (v: unknown, max = 3000) => Math.max(0, Math.min(max, Math.round(Number(v) || 0)));
+// 1인 하루(한국 시간) AI 확인 횟수. secret으로 바꿀 수 있음
+const LIMIT = { food: Number(Deno.env.get("FOOD_DAILY_LIMIT") ?? 5), sold: Number(Deno.env.get("SOLD_DAILY_LIMIT") ?? 10) };
+const LABEL = { food: "사진 확인은", sold: "품절 제보는" };
+const OURS = /^(food|sold)\/[iyb]\d{1,2}-\d+\.jpg$/;   // 이 함수가 만든 파일 이름
+
+// 표에서 더 이상 가리키지 않는 사진 파일 정리 (바뀐 사진, '다시 있어요'로 지워진 품절 증거 등)
+// 방금 올라가는 중인 파일을 지우지 않도록 10분 넘은 것만
+async function sweep(admin: ReturnType<typeof createClient>) {
+  try {
+    const [p, s] = await Promise.all([admin.from("photos").select("path"), admin.from("sold").select("proof_path")]);
+    if (p.error || s.error) return;
+    const keep = new Set([...(p.data ?? []).map((r) => r.path), ...(s.data ?? []).map((r) => r.proof_path)]);
+    const old = Date.now() - 10 * 60_000, gone: string[] = [];
+    for (const dir of ["food", "sold"]) {
+      const { data } = await admin.storage.from("photos").list(dir, { limit: 1000 });
+      for (const f of data ?? []) {
+        const name = `${dir}/${f.name}`;
+        if (OURS.test(name) && !keep.has(name) && new Date(f.created_at).getTime() < old) gone.push(name);
+      }
+    }
+    if (gone.length) { await admin.storage.from("photos").remove(gone); console.log("sweep removed", gone.length); }
+  } catch (e) { console.error("sweep", String(e)); }
+}
 
 async function ask(prompt: string, b64: string) {
   const key = Deno.env.get("GEMINI_API_KEY");
@@ -60,6 +84,12 @@ Deno.serve(async (req) => {
     if (recent.data?.length) return J({ ok: false, reason: "최근 7일 안에 올라온 사진이 있어요" });
   }
 
+  // Gemini를 부르기 직전에 1회 차감 (규칙에 걸려 AI까지 안 간 요청은 세지 않음)
+  const quota = await admin.rpc("ai_quota_take", { p_user: user.id, p_kind: kind, p_lim: LIMIT[kind as "food" | "sold"] });
+  if (quota.error) console.error("quota", quota.error.message);   // 횟수 기록이 실패해도 확인 자체는 막지 않음
+  else if (quota.data === false)
+    return J({ ok: false, limited: true, reason: `오늘 ${LABEL[kind as "food" | "sold"]} ${LIMIT[kind as "food" | "sold"]}번까지예요. 내일 다시 해 주세요` });
+
   const prompt = kind === "food"
     ? `학식 메뉴 사진 검증 작업이야. 메뉴 이름: "${name}" (분류: ${cat}). 1) 사진이 이 메뉴의 실제 음식 사진인지 판단해. 음식이 아니거나, 누가 봐도 다른 메뉴거나, 부적절한 사진이면 match=false. 같은 계열의 음식이면 match=true. 2) match=true면 사진에 보이는 1인분 양을 기준으로 영양성분을 추정해. 메뉴 이름 기준 기본 추정치는 ${num(n?.kcal)}kcal, 단백질 ${num(n?.protein)}g, 탄수화물 ${num(n?.carbs)}g, 당 ${num(n?.sugar)}g 이야. JSON만 답해: {"match":true,"reason":"한국어 한 문장","portion":"적음|보통|많음","nutrition":{"kcal":0,"protein":0,"carbs":0,"sugar":0}}`
     : `학식 품절 제보 검증 작업이야. 사진이 식당 키오스크나 메뉴판이고, 그 안에 "${name}" 메뉴가 품절로 표시되어 있는지 판단해. 메뉴 이름과 품절 표시가 함께 보이면 ok=true, 다른 메뉴만 품절이거나 판단할 수 없으면 ok=false. JSON만 답해: {"ok":true,"reason":"한국어 한 문장"}`;
@@ -73,14 +103,25 @@ Deno.serve(async (req) => {
   const up = await admin.storage.from("photos").upload(path, Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)), { contentType: "image/jpeg" });
   if (up.error) return J({ ok: false, reason: "사진을 저장하지 못했어요" });
   const now = new Date().toISOString();
+  // 예전 파일은 새 행을 저장한 뒤 지움 (저장이 실패하면 예전 사진이 그대로 보이도록)
+  const prev = kind === "sold"
+    ? (await admin.from("sold").select("proof_path").eq("menu_id", menuId).maybeSingle()).data?.proof_path
+    : (await admin.from("photos").select("path").eq("menu_id", menuId).maybeSingle()).data?.path;
+  const dropPrev = async (saved: { error: unknown }) => {
+    if (saved.error) { await admin.storage.from("photos").remove([path]); return false; }   // 저장 실패 → 방금 올린 파일만 정리
+    if (prev && prev !== path && OURS.test(prev)) await admin.storage.from("photos").remove([prev]);
+    EdgeRuntime.waitUntil(sweep(admin));   // 응답은 먼저 보내고 뒤에서 정리
+    return true;
+  };
+  const FAIL = J({ ok: false, reason: "사진을 저장하지 못했어요. 다시 시도해 주세요" });
 
   if (kind === "sold") {
-    await admin.from("sold").upsert({ menu_id: menuId, reported_by: user.id, created_at: now, verified: true, proof_path: path, reason: ai.reason ?? "" }, { onConflict: "menu_id" });
+    if (!(await dropPrev(await admin.from("sold").upsert({ menu_id: menuId, reported_by: user.id, created_at: now, verified: true, proof_path: path, reason: ai.reason ?? "" }, { onConflict: "menu_id" })))) return FAIL;
     return J({ ok: true, verified: true, reason: ai.reason });
   }
   const nut = ai?.nutrition && typeof ai.nutrition.kcal === "number"
     ? { kcal: num(ai.nutrition.kcal), protein: num(ai.nutrition.protein, 300), carbs: num(ai.nutrition.carbs, 500), sugar: num(ai.nutrition.sugar, 300) } : null;
   const portion = ["적음", "보통", "많음"].includes(ai?.portion) ? ai.portion : null;
-  await admin.from("photos").upsert({ menu_id: menuId, path, uploaded_by: user.id, created_at: now, verified: !!ai, nutrition: nut, portion }, { onConflict: "menu_id" });
+  if (!(await dropPrev(await admin.from("photos").upsert({ menu_id: menuId, path, uploaded_by: user.id, created_at: now, verified: !!ai, nutrition: nut, portion }, { onConflict: "menu_id" })))) return FAIL;
   return J({ ok: true, verified: !!ai, reason: ai?.reason, portion, nutrition: nut });
 });

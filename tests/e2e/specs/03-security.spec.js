@@ -37,6 +37,23 @@ test.describe("서버 규칙", () => {
     expect(r).toEqual({ past: true, future: true, now: null });
   });
 
+  test("AI 확인 횟수표(ai_calls)는 앱에서 읽거나 고칠 수 없고, 차감 함수도 직접 못 부른다", async ({ page }) => {
+    const r = await db(page, async () => ({
+      read: (await sb.from("ai_calls").select("*")).data?.length ?? -1,
+      insert: (await sb.from("ai_calls").insert({ user_id: me, kind: "food" })).error?.code,
+      rpc: (await sb.rpc("ai_quota_take", { p_user: me, p_kind: "food", p_lim: 999 })).error?.code,
+    }));
+    expect(r.read).toBe(0);          // RLS: 정책이 없어서 0행
+    expect(r.insert).toBe("42501");
+    expect(r.rpc).toBe("42501");     // service_role(서버 함수)만 실행 가능
+  });
+
+  test("먹음 체크 안 한 메뉴 사진은 AI까지 가지 않고 거절된다(횟수도 안 셈)", async ({ page }) => {
+    const r = await db(page, async () => (await sb.functions.invoke("verify-photo",
+      { body: { kind: "food", menuId: "i4", menuName: "날치알밥", cat: "일품", n: {}, image: "data:image/jpeg;base64,AAAA" } })).data);
+    expect(r).toMatchObject({ ok: false, reason: expect.stringContaining("먹음 체크") });
+  });
+
   test("틀린 복구 코드는 false, 형식이 틀리면 바로 false", async ({ page }) => {
     const r = await db(page, async () => [
       (await sb.rpc("restore_account", { p_code: "ffff-ffff-ffff-ffff" })).data,
