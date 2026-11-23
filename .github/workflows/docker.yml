@@ -22,7 +22,7 @@ jobs:
 
       - name: 화면과 스크립트 응답 확인
         run: |
-          curl -fs http://localhost:8080/ | grep -q '오늘 <mark>뭐 먹지?</mark>'
+          curl -fs http://localhost:8080/ | grep -q '오늘<br>뭐 먹지?'
           curl -fs http://localhost:8080/sync.js | grep -q 'callVerify'
           curl -fs http://localhost:8080/config.js | grep -q 'supabase.co'
           curl -fsI http://localhost:8080/sync.js | grep -qi 'cache-control: public, max-age=600'
