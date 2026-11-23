@@ -1,0 +1,11 @@
+{
+  "name": "haksikshot-e2e",
+  "private": true,
+  "description": "학식샷 E2E 테스트 (Playwright). 도커로 띄운 앱 + 운영 Supabase에 붙어서 실행",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1"
+  }
+}
