@@ -64,9 +64,28 @@ async function hydrate() {
       sb.from("rank_hist").select("week,ord").in("week", wks),
       sb.from("wc_runs").select("theme,winner,log").order("id", { ascending: false }).limit(1500)]);
     res.forEach(r => { if (r.error) throw r.error });
-    const [rv, ph, so, ml, ws, vt, rh, wr] = res.map(r => r.data || []);
-    const sig = JSON.stringify([rv, ph, so, ml, ws, vt, rh, wr.length, wr[0]]);
+    const data = res.map(r => r.data || []);
+    const sig = JSON.stringify([...data.slice(0, 7), data[7].length, data[7][0]]);
     if (sig === lastSig) return; lastSig = sig;
+    saveSnap(data);
+    applySnap(data);
+  } catch (e) { console.error(e); lastSig = ""; if (!hydrate.warned) { hydrate.warned = true; toast("서버에서 데이터를 불러오지 못했어요") } }
+}
+
+// ── 캐시: 마지막으로 받은 서버 데이터를 기기에 저장 → 다음에 열 때 네트워크를 기다리지 않고 바로 그림 ──
+const SNAP = "haksikshot-snap-v1";
+function saveSnap(data) { try { localStorage.setItem(SNAP, JSON.stringify({ me, at: Date.now(), data })) } catch (_) { } }
+function loadSnap() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SNAP) || "null");
+    if (s && s.me === me && Date.now() - s.at < 7 * DAY) { applySnap(s.data); return true }
+  } catch (_) { }
+  return false;
+}
+
+function applySnap([rv, ph, so, ml, ws, vt, rh, wr]) {
+  try {
+    const now = Date.now(), t = x => new Date(x).getTime();
 
     st.mine = {}; Object.keys(SEED_RV).forEach(k => delete SEED_RV[k]); Object.keys(RATE).forEach(k => delete RATE[k]);
     const acc = {};
@@ -104,9 +123,9 @@ async function hydrate() {
   if (CFG.url.includes("YOUR-")) { toast("config.js에 Supabase 주소와 키를 넣어 주세요"); return }
   let { data: { session } } = await sb.auth.getSession();
   if (!session) { const r = await sb.auth.signInAnonymously(); if (r.error) { toast("서버에 연결하지 못했어요"); return } session = r.data.session }
-  me = session.user.id; await hydrate(); loadAcct();
+  me = session.user.id; loadSnap(); await hydrate(); loadAcct();
   sb.channel("live").on("postgres_changes", { event: "*", schema: "public" }, () => hy(500)).subscribe();
-  setInterval(() => hy(0), 30000);
+  setInterval(() => { if (!document.hidden) hy(0) }, 30000);   // 탭이 안 보일 때는 다시 받지 않음
   document.addEventListener("visibilitychange", () => { if (!document.hidden) hy(0) });
   document.addEventListener("focusout", () => { if (pendingRender) { pendingRender = false; setTimeout(render, 0) } });
 })();

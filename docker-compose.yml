@@ -1,0 +1,11 @@
+services:
+  web:
+    build: .
+    image: haksikshot:latest
+    ports:
+      - "8080:8080"
+    # 다른 Supabase 프로젝트로 띄우려면 아래 두 줄의 주석을 풀고 값을 넣기 (공개 anon 키만, 비밀 키는 넣지 말 것)
+    # environment:
+    #   SUPABASE_URL: https://xxxx.supabase.co
+    #   SUPABASE_ANON_KEY: eyJ...
+    restart: unless-stopped
