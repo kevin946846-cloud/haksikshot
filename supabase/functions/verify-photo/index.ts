@@ -9,19 +9,28 @@ async function ask(prompt: string, b64: string) {
   const key = Deno.env.get("GEMINI_API_KEY");
   if (!key) return null;
   const model = Deno.env.get("GEMINI_MODEL") ?? "gemini-2.5-flash";   // 모델명이 바뀌면 secret으로 교체
-  try {
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-      method: "POST",
-      signal: AbortSignal.timeout(15_000),   // Gemini가 늦으면 15초에 끊고 '미확인'으로 처리 (함수 자원 한도 초과 방지)
-      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: b64 } }] }],
-        generationConfig: { responseMimeType: "application/json" },
-      }),
-    });
-    if (!r.ok) { console.error("gemini", model, r.status, (await r.text()).slice(0, 300)); return null; }
-    return JSON.parse((await r.json()).candidates[0].content.parts[0].text);
-  } catch (e) { console.error("gemini", model, String(e)); return null; }
+  // 전체 19초 안에 끝냄(화면은 25초에 풀림). 503(과부하)·429로 빨리 실패하면 남은 시간으로 한 번 더, 실패하면 '미확인'
+  const deadline = Date.now() + 19_000;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const left = deadline - Date.now();
+    if (left < 4_000) break;
+    try {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: "POST",
+        signal: AbortSignal.timeout(left),
+        headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: b64 } }] }],
+          generationConfig: { responseMimeType: "application/json" },
+        }),
+      });
+      if (r.ok) return JSON.parse((await r.json()).candidates[0].content.parts[0].text);
+      console.error("gemini", model, attempt, r.status, (await r.text()).slice(0, 200));
+      if (r.status !== 503 && r.status !== 429) return null;
+    } catch (e) { console.error("gemini", model, attempt, String(e)); }
+    if (attempt === 1) await new Promise((res) => setTimeout(res, 1000));
+  }
+  return null;
 }
 
 Deno.serve(async (req) => {
