@@ -5,3 +5,5 @@ supabase/.temp/
 supabase/.branches/
 node_modules/
 .DS_Store
+tests/e2e/playwright-report/
+tests/e2e/test-results/
