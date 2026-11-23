@@ -431,7 +431,12 @@ try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s)st=Object.assign(
 if(!st.soldReset){st.sold={};st.soldReset=true}
 if(!st.rvReset){st.mine={};st.rvReset=true}
 // 품절 표시는 매일 19시에 초기화
-function lastReset(){const d=new Date();d.setHours(19,0,0,0);if(Date.now()<d.getTime())d.setDate(d.getDate()-1);return d.getTime()}
+// ── 날짜는 모두 한국 시간(KST) 기준: 휴대폰 시간대가 달라도 서버(Asia/Seoul)와 같은 날·끼니·주차 ──
+// 한국은 서머타임이 없어 항상 UTC+9 → 9시간 더한 뒤 UTC 값으로 읽으면 한국 날짜·시각
+const KST=9*36e5;
+const kst=(t=Date.now())=>{const d=new Date(t+KST);return {y:d.getUTCFullYear(),mo:d.getUTCMonth()+1,d:d.getUTCDate(),w:d.getUTCDay(),h:d.getUTCHours()}};
+const kDay0=(t=Date.now())=>Math.floor((t+KST)/864e5)*864e5-KST;   // 그날 한국 0시 (epoch ms)
+function lastReset(){const now=Date.now(),r=kDay0(now)+19*36e5;return now<r?r-864e5:r}
 function purgeSold(){const r=lastReset();let ch=false;Object.keys(st.sold).forEach(id=>{if(st.sold[id].at<r){delete st.sold[id];ch=true}});return ch}
 purgeSold();
 function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){toast("저장 공간이 부족해 일부 사진이 저장되지 않았어요")}}
@@ -450,10 +455,10 @@ const ICON={
 const stars=n=>`<span role="img" aria-label="별점 ${n}점">${ICON.star.repeat(n)}${ICON.starOff.repeat(5-n)}</span>`;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ago=t=>{const m=Math.max(0,Math.round((Date.now()-t)/6e4));return m<1?"방금":m<60?m+"분 전":m<1440?Math.round(m/60)+"시간 전":Math.floor(m/1440)+"일 전"};
-const dayLabel=t=>{const d=new Date(t);return `${d.getMonth()+1}/${d.getDate()} (${"일월화수목금토"[d.getDay()]})`};
-const stampOf=t=>`${dayLabel(t)} ${new Date(t).toLocaleTimeString("ko-KR",{hour:"numeric",minute:"2-digit"})}`;
-const isToday=t=>new Date(t).toDateString()===new Date().toDateString();
-const nowSlot=()=>{const h=new Date().getHours();return h<11?"아침":h<16?"점심":"저녁"};
+const dayLabel=t=>{const k=kst(t);return `${k.mo}/${k.d} (${"일월화수목금토"[k.w]})`};
+const stampOf=t=>`${dayLabel(t)} ${new Date(t).toLocaleTimeString("ko-KR",{hour:"numeric",minute:"2-digit",timeZone:"Asia/Seoul"})}`;
+const isToday=t=>kDay0(t)===kDay0();
+const nowSlot=()=>{const h=kst().h;return h<11?"아침":h<16?"점심":"저녁"};
 const QUICK=[
  {k:"portion",label:"양",opts:["적음","보통","많음"]},
  {k:"salt",label:"간",opts:["싱거움","딱 좋음","짬"]},
@@ -463,7 +468,7 @@ const QUICK=[
 ];
 const fText=f=>f?QUICK.map(q=>f[q.k]?(q.k==="again"?f[q.k]:`${q.label} ${f[q.k]}`):"").filter(Boolean).join(" · "):"";
 let sortBy="low",cat="일품",goal="bulk",rankScope="wk",openId=null,busy={},slotOpen=false,draft={s:0,t:"",f:{}},lastMsg=null;
-const d0=new Date();$("#today").innerHTML=`${d0.getMonth()+1}월 ${d0.getDate()}일 (${"일월화수목금토"[d0.getDay()]})<br>다래락 · 나비센터 1층`;
+const d0=kst();$("#today").innerHTML=`${d0.mo}월 ${d0.d}일 (${"일월화수목금토"[d0.w]})<br>다래락 · 나비센터 1층`;
 function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2400)}
 
 // ── AI 사진 판정 ──
@@ -485,8 +490,8 @@ const PF={"적음":0.85,"보통":1,"많음":1.15};
 function portionOf(id){const r=st.mine[id];return (r&&r.f&&r.f.portion)||(r&&r.portion)||(st.photos[id]&&st.photos[id].portion)||null}
 function nut(m){const ph=st.photos[m.id];if(ph&&ph.nutrition)return ph.nutrition;const f=PF[portionOf(m.id)]||1;if(f===1)return m.n;return {kcal:Math.round(m.n.kcal*f),protein:Math.round(m.n.protein*f),carbs:Math.round(m.n.carbs*f),sugar:Math.round(m.n.sugar*f)}}
 // ── 주간 가성비: 월요일 기준 주차, 투표 ──
-function weekStart(t=Date.now()){const d=new Date(t);d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d.getTime()}
-const wkKey=t=>{const d=new Date(weekStart(t));return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()};
+function weekStart(t=Date.now()){return kDay0(t)-((kst(t).w+6)%7)*864e5}   // 그 주 월요일 한국 0시
+const wkKey=t=>{const k=kst(weekStart(t));return k.y+"-"+k.mo+"-"+k.d};
 function votesFor(id,t){const k=wkKey(t)+"|"+id,a=AGG.votes[k]||{up:0,down:0},v=st.votes[k]||0;return {up:a.up+(v===1?1:0),down:a.down+(v===-1?1:0),mine:v}}
 function valueScore(m){
   const lw=votesFor(m.id,Date.now()-7*DAY),tot=lw.up+lw.down,r=rate(m.id,"all");
@@ -526,7 +531,7 @@ function renderSlotbar(){
   $("#slotbar").innerHTML=`오늘 먹음 체크 ${tm.length}/3`+SLOTS.map(s=>`<span class="sl${slotUsed(s)?" on":""}">${s}</span>`).join("");
 }
 function renderCats(){$("#cats").innerHTML=["일품","양식","분식"].map(c=>{const all=MENUS.filter(m=>m.cat===c),n=all.filter(avail).length;return `<button class="cat" role="tab" aria-selected="${c===cat}" data-c="${c}">${c}<small>${n}/${all.length}</small></button>`}).join("")}
-function renderTicketbar(){const so=MENUS.filter(m=>!avail(m)).length,d=new Date(),mm=String(d.getMonth()+1).padStart(2,"0"),dd=String(d.getDate()).padStart(2,"0");$("#tkt-no").textContent=`No.${mm}${dd}`;$("#tkt-date").textContent=`${mm}.${dd}`;$("#ticketbar").innerHTML=["일품","양식","분식"].map(c=>`<button class="tc" data-c="${c}" aria-pressed="${c===cat}"><small>${c}</small><b>${MENUS.filter(m=>m.cat===c).length}</b></button>`).join("")+`<div class="so">지금 품절 <b>${so}</b></div>`}
+function renderTicketbar(){const so=MENUS.filter(m=>!avail(m)).length,d=kst(),mm=String(d.mo).padStart(2,"0"),dd=String(d.d).padStart(2,"0");$("#tkt-no").textContent=`No.${mm}${dd}`;$("#tkt-date").textContent=`${mm}.${dd}`;$("#ticketbar").innerHTML=["일품","양식","분식"].map(c=>`<button class="tc" data-c="${c}" aria-pressed="${c===cat}"><small>${c}</small><b>${MENUS.filter(m=>m.cat===c).length}</b></button>`).join("")+`<div class="so">지금 품절 <b>${so}</b></div>`}
 function tile(m){
   const ph=st.photos[m.id],so=st.sold[m.id],r=rate(m.id,"all"),e=eatenToday(m.id);
   const badge=so?'<span class="badge sold">품절</span>':e?`<span class="badge done">${e.slot}</span>`:st.plans[m.id]?'<span class="badge plan">예정</span>':"";
@@ -554,7 +559,7 @@ function renderReco(){
   const order=isV?(st.rankHist[wk]||list.map(m=>m.id)).map(byId).filter(m=>m&&avail(m)):list;
   const move=(m,i)=>{if(!prev)return `<span class="mv">NEW</span>`;const j=prev.indexOf(m.id);return j<0?`<span class="mv">NEW</span>`:j>i?`<span class="mv up">${ICON.up}${j-i}</span>`:j<i?`<span class="mv dn">${ICON.down}${i-j}</span>`:`<span class="mv">-</span>`};
   const vote=m=>{const v=votesFor(m.id);return `<div class="vote"><button data-vote="1" data-id="${m.id}" aria-pressed="${v.mine===1}">추천 ${v.up}</button><button data-vote="-1" data-id="${m.id}" aria-pressed="${v.mine===-1}">비추천 ${v.down}</button></div>`};
-  if(isV){const ws=new Date(weekStart()),we=new Date(weekStart()+6*DAY);$("#reco-slot").textContent=`${ws.getMonth()+1}/${ws.getDate()}~${we.getMonth()+1}/${we.getDate()} · 매주 월요일 갱신`}
+  if(isV){const ws=kst(weekStart()),we=kst(weekStart()+6*DAY);$("#reco-slot").textContent=`${ws.mo}/${ws.d}~${we.mo}/${we.d} · 매주 월요일 갱신`}
   const t1=isV?order[0]:top;
   $("#reco-hero").innerHTML=`<div class="herowrap"><button class="pickhero" data-open="${t1.id}"><span class="eyebrow">${g.label} 1순위 · ${t1.cat}${isV?" · "+move(t1,0):""}</span><span class="hn">${esc(t1.name)}</span><span class="why">${g.why(t1)}</span>
     <span class="bignums">${isV?`<div><b>${t1.off}%</b><span>시중가 대비 할인</span></div><div><b>${won(t1.save)}</b><span>아끼는 돈</span></div><div><b>${won(t1.price)}</b><span>학식 가격</span></div>`:nums}</span></button>${isV?vote(t1):""}</div>`;
