@@ -59,19 +59,27 @@ h2{font-family:var(--display);font-weight:400;font-size:22px;margin:4px 0 0;text
 .badge.plan{background:var(--ticket);color:var(--ticket-ink);border-color:var(--ticket);transform:translateX(-50%) rotate(6deg)}
 .badge.done{color:var(--accent);border-color:var(--accent);border-radius:999px;transform:translateX(-50%) rotate(8deg)}
 /* ── 히어로 ── */
-.mhero{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 18px 18px;display:flex;flex-direction:column;gap:12px}
-.mhero h2{font-size:36px;line-height:1.15;margin:0}
-.mhero h2 mark{background:linear-gradient(transparent 62%,var(--ticket) 62%);color:inherit}
-.mhero p{margin:0;font-size:15px;line-height:1.6;color:var(--ink);opacity:.85;word-break:keep-all}
-.mhero .mstamp{position:absolute;top:18px;right:16px;transform:rotate(8deg);border:2px solid var(--accent);color:var(--accent);border-radius:999px;padding:3px 10px;font-family:var(--display);font-size:14px}
-.mhero .btn{flex:none;text-decoration:none;min-height:48px;display:flex;align-items:center;justify-content:center;font-size:15px}
-.ticketbar{display:flex;background:var(--ticket);color:var(--ticket-ink);border-radius:14px;overflow:hidden}
-.ticketbar .tc{flex:1;font:inherit;color:inherit;background:none;border:0;padding:10px 4px;min-height:56px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
-.ticketbar .tc small{font-size:12px}.ticketbar .tc b{font-family:var(--display);font-weight:400;font-size:22px;line-height:1.1}
-.ticketbar .tc[aria-pressed="true"] small{font-weight:700;text-decoration:underline}
-.ticketbar .cut{border-left:2px dashed rgba(58,47,0,.35);margin:10px 0}
-.ticketbar .so{width:84px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.ticketbar .so small{font-size:12px}.ticketbar .so b{font-family:var(--display);font-weight:400;font-size:20px;line-height:1.1}
+/* ── 첫 화면 히어로: 식권 발권기 (본권 + 노란 절취 스텁) ── */
+.tkt{position:relative;display:flex;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.tkt-main{position:relative;flex:1;min-width:0;padding:20px;display:flex;flex-direction:column}
+.tkt-serial{display:flex;align-items:center;gap:8px;font-size:12px;line-height:16px;color:var(--muted);letter-spacing:.4px}
+.tkt-serial b{color:var(--ink)}.tkt-serial span{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.tkt h2{margin:16px 0 0;font-size:40px;line-height:1.1}
+.tkt p{margin:8px 0 0;font-size:14px;line-height:1.6;color:var(--ink);opacity:.85;word-break:keep-all}
+.tkt .btn{flex:none;margin-top:16px;text-decoration:none;min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px}
+.tkt-stamp{position:absolute;top:40px;right:16px;width:64px;height:64px;box-sizing:border-box;border:2px solid var(--accent);border-radius:50%;color:var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-10deg);font-family:var(--display);line-height:1.1}
+.tkt-stamp small{font-size:12px}.tkt-stamp b{font-weight:400;font-size:16px}
+.tkt-stub{width:88px;flex:none;box-sizing:border-box;background:var(--ticket);color:var(--ticket-ink);border-left:2px dashed rgba(58,47,0,.35);padding:16px 8px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;gap:8px}
+.tkt-stub>small{font-size:12px;font-weight:700;line-height:16px}
+#ticketbar{display:flex;flex-direction:column;align-items:stretch;gap:2px;width:100%}
+.tkt-stub .tc{width:100%;font:inherit;color:inherit;background:none;border:0;min-height:48px;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.tkt-stub .tc small{font-size:12px;line-height:16px}.tkt-stub .tc b{font-family:var(--display);font-weight:400;font-size:24px;line-height:1}
+.tkt-stub .tc[aria-pressed="true"]{background:rgba(58,47,0,.1)}.tkt-stub .tc[aria-pressed="true"] small{font-weight:700}
+.tkt-stub .so{font-size:11.5px;line-height:1.3;text-align:center}
+.tkt-stub .so b{font-family:var(--display);font-weight:400;font-size:15px}
+.tkt-stub svg{display:block}
+.tkt-notch{position:absolute;right:80px;width:16px;height:16px;box-sizing:border-box;border-radius:50%;background:var(--bg);border:1px solid var(--line)}
+.tkt-notch.t{top:-9px}.tkt-notch.b{bottom:-9px}
 .tile.sold{background:var(--bg)}
 .tile.sold .tt{filter:grayscale(1);opacity:.55}
 .tile.sold .tn,.tile.sold .tp{color:var(--muted)}
@@ -292,13 +300,21 @@ nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:
   <p class="proto">베타 버전이에요. 메뉴·가격은 다래락 키오스크 기준이고, 영양성분과 시중가는 추정치예요.</p>
 
   <section id="view-menu" class="view" aria-label="메뉴">
-    <div class="mhero">
-      <span class="mstamp" aria-hidden="true">먹음 인증</span>
-      <h2>오늘 <mark>뭐 먹지?</mark></h2>
-      <p>학생들이 직접 채우는 다래락 학식 사진·별점·품절 서비스</p>
-      <a class="btn primary" href="#cats">메뉴 구경하기</a>
-    </div>
-    <div class="ticketbar" id="ticketbar" aria-label="오늘 메뉴 식권"></div>
+    <section class="tkt" aria-label="오늘의 식권">
+      <div class="tkt-main">
+        <div class="tkt-serial"><b>학식샷 식권</b><span id="tkt-no"></span></div>
+        <h2>오늘<br>뭐 먹지?</h2>
+        <p>학생들이 직접 채우는 다래락 학식 사진·별점·품절 서비스</p>
+        <a class="btn primary" href="#cats">메뉴 구경하기<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></a>
+        <div class="tkt-stamp" aria-hidden="true"><small id="tkt-date"></small><b>발권</b></div>
+      </div>
+      <div class="tkt-stub">
+        <small>오늘 메뉴</small>
+        <div id="ticketbar"></div>
+        <svg width="56" height="24" viewBox="0 0 56 24" fill="currentColor" aria-hidden="true" focusable="false"><rect x="0" y="0" width="2" height="24"/><rect x="4" y="0" width="1" height="24"/><rect x="7" y="0" width="3" height="24"/><rect x="12" y="0" width="1" height="24"/><rect x="15" y="0" width="2" height="24"/><rect x="19" y="0" width="1" height="24"/><rect x="22" y="0" width="3" height="24"/><rect x="27" y="0" width="1" height="24"/><rect x="30" y="0" width="2" height="24"/><rect x="34" y="0" width="1" height="24"/><rect x="37" y="0" width="3" height="24"/><rect x="42" y="0" width="1" height="24"/><rect x="45" y="0" width="2" height="24"/><rect x="49" y="0" width="1" height="24"/><rect x="52" y="0" width="1" height="24"/><rect x="54" y="0" width="2" height="24"/></svg>
+      </div>
+      <span class="tkt-notch t" aria-hidden="true"></span><span class="tkt-notch b" aria-hidden="true"></span>
+    </section>
     <div class="slotbar" id="slotbar"></div>
     <div class="cats" role="tablist" id="cats"></div>
     <div class="sortbar" id="sortbar"></div>
@@ -510,7 +526,7 @@ function renderSlotbar(){
   $("#slotbar").innerHTML=`오늘 먹음 체크 ${tm.length}/3`+SLOTS.map(s=>`<span class="sl${slotUsed(s)?" on":""}">${s}</span>`).join("");
 }
 function renderCats(){$("#cats").innerHTML=["일품","양식","분식"].map(c=>{const all=MENUS.filter(m=>m.cat===c),n=all.filter(avail).length;return `<button class="cat" role="tab" aria-selected="${c===cat}" data-c="${c}">${c}<small>${n}/${all.length}</small></button>`}).join("")}
-function renderTicketbar(){const so=MENUS.filter(m=>!avail(m)).length;$("#ticketbar").innerHTML=["일품","양식","분식"].map(c=>`<button class="tc" data-c="${c}" aria-pressed="${c===cat}"><small>${c}</small><b>${MENUS.filter(m=>m.cat===c).length}</b></button>`).join("")+`<span class="cut" aria-hidden="true"></span><div class="so"><small>지금 품절</small><b>${so}</b></div>`}
+function renderTicketbar(){const so=MENUS.filter(m=>!avail(m)).length,d=new Date(),mm=String(d.getMonth()+1).padStart(2,"0"),dd=String(d.getDate()).padStart(2,"0");$("#tkt-no").textContent=`No.${mm}${dd}`;$("#tkt-date").textContent=`${mm}.${dd}`;$("#ticketbar").innerHTML=["일품","양식","분식"].map(c=>`<button class="tc" data-c="${c}" aria-pressed="${c===cat}"><small>${c}</small><b>${MENUS.filter(m=>m.cat===c).length}</b></button>`).join("")+`<div class="so">지금 품절 <b>${so}</b></div>`}
 function tile(m){
   const ph=st.photos[m.id],so=st.sold[m.id],r=rate(m.id,"all"),e=eatenToday(m.id);
   const badge=so?'<span class="badge sold">품절</span>':e?`<span class="badge done">${e.slot}</span>`:st.plans[m.id]?'<span class="badge plan">예정</span>':"";
@@ -610,7 +626,7 @@ function renderDetail(){
   const mineR=st.mine[m.id];
   const rvs=[...(mineR?[{s:mineR.s,t:mineR.t,f:mineR.f,who:"나",at:mineR.at,v:mineR.verified}]:[]),...(SEED_RV[m.id]||[]).map(x=>({...x,at:Date.now()-x.d*DAY}))];
   $("#detail-body").innerHTML=`<div class="${so?"sold":""}" style="display:flex;flex-direction:column;gap:16px">
-    <div class="mhero">${hero}</div>
+    <div class="hero">${hero}</div>
     <div class="dname"><h3>${esc(m.name)}</h3><span class="price">${won(m.price)}</span></div>
     ${m.off>0?`<div class="meta">밖에서 사 먹으면 약 ${won(m.market)} · <span class="pill ok">${m.off}% 저렴</span></div>`:""}
     <div class="meta">${so?`<span class="pill sold">품절 · ${ago(so.at)} ${esc(so.who)} 제보${so.verified?" · 사진 확인됨":""}</span>`:""}${r.n?`<span class="s">${stars(Math.round(r.avg))}</span> ${r.avg.toFixed(1)} · 평가 ${r.n}개`:"아직 평가가 없어요"} · 이번 주 ${weekSales(m.id)}그릇 · ${m.tags.map(t=>"#"+t).join(" ")}</div>
