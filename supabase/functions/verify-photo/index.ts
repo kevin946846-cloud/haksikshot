@@ -8,8 +8,9 @@ const num = (v: unknown, max = 3000) => Math.max(0, Math.min(max, Math.round(Num
 async function ask(prompt: string, b64: string) {
   const key = Deno.env.get("GEMINI_API_KEY");
   if (!key) return null;
-  // 설정한 모델(GEMINI_MODEL)이 느리거나 과부하면 대체 모델로. 전체 19초 안에 끝냄(화면은 25초에 풀림), 다 실패하면 '미확인'
-  const models = [...new Set([Deno.env.get("GEMINI_MODEL"), Deno.env.get("GEMINI_FALLBACK_MODEL") ?? "gemini-3.6-flash"].filter(Boolean))] as string[];
+  // 빠른 모델(gemini-3.6-flash, 실측 1.7~2.6초)을 먼저, 실패하면 GEMINI_MODEL(3.8, 과부하·9초 이상 잦음)로.
+  // 전체 19초 안에 끝냄(화면은 25초에 풀림), 다 실패하면 '미확인'. 순서는 GEMINI_PRIMARY_MODEL secret으로 바꿀 수 있음
+  const models = [...new Set([Deno.env.get("GEMINI_PRIMARY_MODEL") ?? "gemini-3.6-flash", Deno.env.get("GEMINI_MODEL"), Deno.env.get("GEMINI_FALLBACK_MODEL")].filter(Boolean))] as string[];
   const deadline = Date.now() + 19_000;
   for (let attempt = 1; attempt <= models.length; attempt++) {
     const model = models[attempt - 1], left = deadline - Date.now();
