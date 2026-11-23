@@ -202,6 +202,11 @@ textarea{font:inherit;width:100%;min-height:72px;border:1px solid var(--line);bo
 nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);z-index:5}
 .tab{flex:1;max-width:140px;font:inherit;font-size:13.5px;font-weight:700;padding:14px 4px;border:0;background:none;color:var(--muted);cursor:pointer;border-top:3px solid transparent}
 .tab[aria-selected="true"]{color:var(--accent);border-top-color:var(--accent)}
+.ic{width:1em;height:1em;vertical-align:-.125em;flex:none}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:44px;padding:7px 4px}
+.tab .ic{width:22px;height:22px}
+.stars button .ic{display:block}
+.mv .ic{width:1.2em;height:1.2em;vertical-align:-.25em}
 .herowrap{display:flex;flex-direction:column;gap:6px}
 .vr{border-bottom:1px solid var(--line)}.vr:last-child{border-bottom:0}.vr .cr{border-bottom:0;width:100%}
 .vote{display:flex;gap:6px;padding:0 12px 10px 46px}
@@ -338,10 +343,10 @@ nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:
 </div>
 
 <nav role="tablist">
-  <button class="tab" role="tab" data-view="menu" aria-selected="true">메뉴</button>
-  <button class="tab" role="tab" data-view="reco" aria-selected="false">메뉴 추천</button>
-  <button class="tab" role="tab" data-view="taste" aria-selected="false">내 입맛</button>
-  <button class="tab" role="tab" data-view="rank" aria-selected="false">랭킹</button>
+  <button class="tab" role="tab" data-view="menu" aria-selected="true"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 11h18"/><path d="M4.5 11a7.5 7.5 0 0 0 15 0"/><path d="M9.5 21h5"/><path d="M9 7c0-1.5 1-1.5 1-3"/><path d="M14 7c0-1.5 1-1.5 1-3"/></svg><span>메뉴</span></button>
+  <button class="tab" role="tab" data-view="reco" aria-selected="false"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg><span>메뉴 추천</span></button>
+  <button class="tab" role="tab" data-view="taste" aria-selected="false"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg><span>내 입맛</span></button>
+  <button class="tab" role="tab" data-view="rank" aria-selected="false"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg><span>랭킹</span></button>
 </nav>
 
 <dialog id="detail">
@@ -418,7 +423,15 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){toast(
 const $=s=>document.querySelector(s);
 const DAY=864e5,SLOTS=["아침","점심","저녁"];
 const won=n=>n.toLocaleString("ko-KR")+"원";
-const stars=n=>"★".repeat(n)+"☆".repeat(5-n);
+// 아이콘은 SVG로 한 곳에 정의해 재사용 (텍스트 기호는 기기·글꼴마다 모양이 달라짐)
+const SVG_A='class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"',STAR_D="M12 2.5l2.94 5.96 6.56.95-4.75 4.63 1.12 6.54L12 17.5l-5.87 3.08 1.12-6.54L2.5 9.41l6.56-.95Z",STROKE='fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+const ICON={
+  star:`<svg ${SVG_A} fill="currentColor"><path d="${STAR_D}"/></svg>`,
+  starOff:`<svg ${SVG_A} ${STROKE}><path d="${STAR_D}"/></svg>`,
+  up:`<svg ${SVG_A} ${STROKE}><path d="m6 15 6-6 6 6"/></svg>`,
+  down:`<svg ${SVG_A} ${STROKE}><path d="m6 9 6 6 6-6"/></svg>`
+};
+const stars=n=>`<span role="img" aria-label="별점 ${n}점">${ICON.star.repeat(n)}${ICON.starOff.repeat(5-n)}</span>`;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ago=t=>{const m=Math.max(0,Math.round((Date.now()-t)/6e4));return m<1?"방금":m<60?m+"분 전":m<1440?Math.round(m/60)+"시간 전":Math.floor(m/1440)+"일 전"};
 const dayLabel=t=>{const d=new Date(t);return `${d.getMonth()+1}/${d.getDate()} (${"일월화수목금토"[d.getDay()]})`};
@@ -501,7 +514,7 @@ function renderTicketbar(){const so=MENUS.filter(m=>!avail(m)).length;$("#ticket
 function tile(m){
   const ph=st.photos[m.id],so=st.sold[m.id],r=rate(m.id,"all"),e=eatenToday(m.id);
   const badge=so?'<span class="badge sold">품절</span>':e?`<span class="badge done">${e.slot}</span>`:st.plans[m.id]?'<span class="badge plan">예정</span>':"";
-  return `<button class="tile${so?" sold":""}" data-open="${m.id}">${badge}<span class="tno" aria-hidden="true"><span>${m.cat}</span><span>No.${m.id.slice(1).padStart(2,"0")}</span></span><span class="tt" aria-hidden="true">${ph?`<img src="${ph.src}" alt="">`:esc(m.name[0])}</span><span class="perf" aria-hidden="true"></span><span class="tn">${esc(m.name)}</span><span class="tp">${won(m.price)}</span><span class="tr">${r.n?`<b>★</b> ${r.avg.toFixed(1)} (${r.n})`:"평가 없음"}</span></button>`;
+  return `<button class="tile${so?" sold":""}" data-open="${m.id}">${badge}<span class="tno" aria-hidden="true"><span>${m.cat}</span><span>No.${m.id.slice(1).padStart(2,"0")}</span></span><span class="tt" aria-hidden="true">${ph?`<img src="${ph.src}" alt="">`:esc(m.name[0])}</span><span class="perf" aria-hidden="true"></span><span class="tn">${esc(m.name)}</span><span class="tp">${won(m.price)}</span><span class="tr">${r.n?`<b>${ICON.star}</b> ${r.avg.toFixed(1)} (${r.n})`:"평가 없음"}</span></button>`;
 }
 function renderMenus(){
   const SORTS={low:["가격 낮은 순",(a,b)=>a.price-b.price],high:["가격 높은 순",(a,b)=>b.price-a.price],star:["별점 순",(a,b)=>{const x=rate(a.id,"all"),y=rate(b.id,"all");return (y.n?1:0)-(x.n?1:0)||y.avg-x.avg||y.n-x.n||a.price-b.price}]};
@@ -523,7 +536,7 @@ function renderReco(){
   const wk=wkKey(),prev=st.rankHist[wkKey(Date.now()-7*DAY)];
   if(isV&&!st.rankHist[wk]){st.rankHist[wk]=list.map(m=>m.id);API.rankHist(wk,st.rankHist[wk]);save()}
   const order=isV?(st.rankHist[wk]||list.map(m=>m.id)).map(byId).filter(m=>m&&avail(m)):list;
-  const move=(m,i)=>{if(!prev)return `<span class="mv">NEW</span>`;const j=prev.indexOf(m.id);return j<0?`<span class="mv">NEW</span>`:j>i?`<span class="mv up">▲${j-i}</span>`:j<i?`<span class="mv dn">▼${i-j}</span>`:`<span class="mv">-</span>`};
+  const move=(m,i)=>{if(!prev)return `<span class="mv">NEW</span>`;const j=prev.indexOf(m.id);return j<0?`<span class="mv">NEW</span>`:j>i?`<span class="mv up">${ICON.up}${j-i}</span>`:j<i?`<span class="mv dn">${ICON.down}${i-j}</span>`:`<span class="mv">-</span>`};
   const vote=m=>{const v=votesFor(m.id);return `<div class="vote"><button data-vote="1" data-id="${m.id}" aria-pressed="${v.mine===1}">추천 ${v.up}</button><button data-vote="-1" data-id="${m.id}" aria-pressed="${v.mine===-1}">비추천 ${v.down}</button></div>`};
   if(isV){const ws=new Date(weekStart()),we=new Date(weekStart()+6*DAY);$("#reco-slot").textContent=`${ws.getMonth()+1}/${ws.getDate()}~${we.getMonth()+1}/${we.getDate()} · 매주 월요일 갱신`}
   const t1=isV?order[0]:top;
@@ -571,7 +584,7 @@ function renderRank(){
   const sales=MENUS.map(m=>({m,v:weekSales(m.id)})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,10),max=sales[0]?sales[0].v:1;
   $("#rank-sales").innerHTML=!sales.length?`<div class="empty">이번 주 먹음 체크가 쌓이면 순위가 생겨요</div>`:sales.map((x,i)=>`<button class="rk" data-open="${x.m.id}"><span class="n">${i+1}</span><span class="m"><b>${esc(x.m.name)}</b><small>${x.m.cat} · ${won(x.m.price)}</small><span class="bar"><i style="width:${Math.round(x.v/max*100)}%"></i></span></span><span class="v">${x.v}그릇</span></button>`).join("");
   const rs=MENUS.map(m=>({m,r:rate(m.id,rankScope)})).filter(x=>x.r.n>=5).sort((a,b)=>b.r.avg-a.r.avg||b.r.n-a.r.n).slice(0,10);
-  $("#rank-star").innerHTML=rs.length?rs.map((x,i)=>`<button class="rk" data-open="${x.m.id}"><span class="n">${i+1}</span><span class="m"><b>${esc(x.m.name)}</b><small>평가 ${x.r.n}개 · ${x.m.cat}</small></span><span class="v"><span style="color:var(--star)">★</span> ${x.r.avg.toFixed(2)}</span></button>`).join(""):`<div class="empty">아직 순위를 매길 만큼 평가가 없어요</div>`;
+  $("#rank-star").innerHTML=rs.length?rs.map((x,i)=>`<button class="rk" data-open="${x.m.id}"><span class="n">${i+1}</span><span class="m"><b>${esc(x.m.name)}</b><small>평가 ${x.r.n}개 · ${x.m.cat}</small></span><span class="v"><span style="color:var(--star)">${ICON.star}</span> ${x.r.avg.toFixed(2)}</span></button>`).join(""):`<div class="empty">아직 순위를 매길 만큼 평가가 없어요</div>`;
   document.querySelectorAll("#rank-seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.rank===rankScope));
   $("#wc-themes").innerHTML=Object.entries(THEMES).map(([k,t])=>`<button class="wct" data-wcstart="${k}"><b>${t.title}</b><small>${t.sub}</small><span>시작하기</span></button>`).join("");
   $("#wc-seg").innerHTML=Object.entries(THEMES).map(([k,t])=>`<button data-wcrank="${k}" aria-pressed="${k===wcTheme}">${t.short}</button>`).join("");
@@ -611,7 +624,7 @@ function renderDetail(){
       ${ph&&ph.nutrition?`<span class="nrow">최근 사진 기준 (${esc(ph.portion||"보통")} 양): ${ph.nutrition.kcal}kcal · 단백질 ${ph.nutrition.protein}g · 탄수화물 ${ph.nutrition.carbs}g · 당 ${ph.nutrition.sugar}g</span>`:`<span class="nrow">사진이 올라오면 AI가 실제 양을 보고 다시 추정해요.</span>`}</div>
     ${AI_LINE[m.id]?`<div class="panel ai"><em>AI 한줄평</em>${AI_LINE[m.id]}</div>`:""}
     <div class="panel"><h4>${mineR?"내 평가 수정":"별점과 코멘트 남기기"} <small>${e?"오늘 먹음 체크해서 '먹음 인증'으로 표시돼요":"전에 먹어 본 기억으로도 남길 수 있어요"}</small></h4>
-      <div class="stars">${[1,2,3,4,5].map(n=>`<button type="button" data-star="${n}" class="${n<=draft.s?"on":""}" aria-label="${n}점">★</button>`).join("")}</div>
+      <div class="stars">${[1,2,3,4,5].map(n=>`<button type="button" data-star="${n}" class="${n<=draft.s?"on":""}" aria-label="${n}점">${ICON.star}</button>`).join("")}</div>
       <span class="hint">별점만 골라도 등록할 수 있어요. 아래는 모두 선택이에요.</span>
       ${QUICK.filter(q=>!q.only||q.only(m)).map(q=>`<div class="qrow"><span class="ql">${q.label}</span><div class="qopts">${(q.optsFor?q.optsFor(m):q.opts).map(o=>`<button type="button" data-q="${q.k}" data-qv="${o}" aria-pressed="${draft.f[q.k]===o}">${o}</button>`).join("")}</div></div>`).join("")}
       <label for="rv-text" class="hint">한 줄 코멘트 (선택)</label>
@@ -635,7 +648,7 @@ const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(M
 const roundName=n=>n===2?"결승":n+"강";
 function startWC(theme){wc={theme,round:shuffle(MENUS.filter(m=>m.price>1000).map(m=>m.id)).slice(0,16),next:[],i:0,champ:null,log:[]};showSplash();renderWC();const d=$("#wc");if(!d.open)d.showModal()}
 function wcCard(id,k){const m=byId(id),ph=st.photos[id],r=rate(id,"all");
-  return `<button class="wcc" data-wcpick="${k}"><span class="wci">${ph?`<img src="${ph.src}" alt="">`:esc(m.name[0])}</span><b>${esc(m.name)}</b><small>${won(m.price)} · ${m.cat}</small><small>${m.tags.map(t=>"#"+t).join(" ")}</small>${r.n?`<small>★ ${r.avg.toFixed(1)}</small>`:""}</button>`}
+  return `<button class="wcc" data-wcpick="${k}"><span class="wci">${ph?`<img src="${ph.src}" alt="">`:esc(m.name[0])}</span><b>${esc(m.name)}</b><small>${won(m.price)} · ${m.cat}</small><small>${m.tags.map(t=>"#"+t).join(" ")}</small>${r.n?`<small>${ICON.star} ${r.avg.toFixed(1)}</small>`:""}</button>`}
 function renderWC(){
   if(!wc)return;
   const T=THEMES[wc.theme];
