@@ -12,15 +12,16 @@ async function ask(prompt: string, b64: string) {
   try {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
       method: "POST",
+      signal: AbortSignal.timeout(15_000),   // Gemini가 늦으면 15초에 끊고 '미확인'으로 처리 (함수 자원 한도 초과 방지)
       headers: { "Content-Type": "application/json", "x-goog-api-key": key },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: b64 } }] }],
         generationConfig: { responseMimeType: "application/json" },
       }),
     });
-    if (!r.ok) return null;
+    if (!r.ok) { console.error("gemini", model, r.status, (await r.text()).slice(0, 300)); return null; }
     return JSON.parse((await r.json()).candidates[0].content.parts[0].text);
-  } catch { return null; }
+  } catch (e) { console.error("gemini", model, String(e)); return null; }
 }
 
 Deno.serve(async (req) => {
