@@ -38,9 +38,13 @@ const API = {
 async function callVerify(kind, file, m) {
   try {
     const image = await shrink(file);
-    const { data, error } = await sb.functions.invoke("verify-photo", { body: { kind, menuId: m.id, menuName: m.name, cat: m.cat, n: m.n, image } });
+    const call = sb.functions.invoke("verify-photo", { body: { kind, menuId: m.id, menuName: m.name, cat: m.cat, n: m.n, image } });
+    const late = new Promise(r => setTimeout(() => r("timeout"), 25000));   // 서버가 오래 걸려도 화면은 25초 뒤 풀어 줌
+    const res = await Promise.race([call, late]);
+    if (res === "timeout") { hy(5000); return { ok: false, reason: "확인이 오래 걸리고 있어요. 잠시 뒤 새로고침하면 결과가 반영돼요" } }
+    const { data, error } = res;
     hy(800);
-    return error || !data ? { ok: false, reason: "서버에 연결하지 못했어요" } : data;
+    return error || !data ? { ok: false, reason: "서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요" } : data;
   } catch (e) { return { ok: false, reason: "사진을 읽지 못했어요. 다른 사진을 골라 주세요" } }
 }
 aiCheckFood = async (file, m) => { const r = await callVerify("food", file, m); if (!r.ok) return { match: false, reason: r.reason }; return r.verified ? { match: true, reason: r.reason, portion: r.portion, nutrition: r.nutrition } : { skipped: true } };

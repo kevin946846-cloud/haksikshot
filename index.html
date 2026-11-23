@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html lang="ko"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>학식샷</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap">
@@ -6,18 +6,18 @@
 /* Layout: phone-width app; each tab has its own format — kiosk grid (메뉴), goal board (추천), taste profile (내 입맛), leaderboard (랭킹) */
 :root{
   --bg:#faf7f2; --surface:#ffffff; --ink:#1f1b16; --muted:#6b635a; --line:#e7e1d8;
-  --accent:#b54a17; --accent-soft:#f8e7dc; --ticket:#ffd84d; --ticket-ink:#3a2f00; --star:#e8a317;
+  --accent:#b54a17; --accent-soft:#f8e7dc; --accent-ink:#9a3d12; --ticket:#ffd84d; --ticket-ink:#3a2f00; --star:#e8a317;
   --sold:#b4322a; --sold-soft:#f8e1de; --diet:#2e7bbf; --diet-soft:#dfecf8; --bulk:#c4581f; --bulk-soft:#f9e4d6; --value:#6b4fb3; --value-soft:#e9e3f7;
   --display:"Jua","Noto Sans KR",system-ui,sans-serif;
   --body:"Noto Sans KR",system-ui,-apple-system,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#171411; --surface:#211c18; --ink:#efe9e2; --muted:#a89e93; --line:#3a332c;
-  --accent:#ee9466; --accent-soft:#3a2418; --ticket:#e6c23c; --ticket-ink:#2a2200; --star:#f2b938;
+  --accent:#ee9466; --accent-soft:#3a2418; --accent-ink:#ee9466; --ticket:#e6c23c; --ticket-ink:#2a2200; --star:#f2b938;
   --sold:#f08a80; --sold-soft:#3a1f1c; --diet:#7db7ea; --diet-soft:#1c2c3b; --bulk:#f0915a; --bulk-soft:#3a2518; --value:#b4a0ee; --value-soft:#2a2340; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#171411; --surface:#211c18; --ink:#efe9e2; --muted:#a89e93; --line:#3a332c;
-  --accent:#ee9466; --accent-soft:#3a2418; --ticket:#e6c23c; --ticket-ink:#2a2200; --star:#f2b938;
+  --accent:#ee9466; --accent-soft:#3a2418; --accent-ink:#ee9466; --ticket:#e6c23c; --ticket-ink:#2a2200; --star:#f2b938;
   --sold:#f08a80; --sold-soft:#3a1f1c; --diet:#7db7ea; --diet-soft:#1c2c3b; --bulk:#f0915a; --bulk-soft:#3a2518; --value:#b4a0ee; --value-soft:#2a2340; color-scheme:dark}
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -28,7 +28,7 @@ h1{font-family:var(--display);font-weight:400;font-size:34px;line-height:1;margi
 h1 span{color:var(--accent)}
 h2{font-family:var(--display);font-weight:400;font-size:22px;margin:4px 0 0;text-wrap:balance}
 .date{font-size:13px;color:var(--muted);text-align:right}
-.proto{font-size:12px;background:var(--accent-soft);color:var(--accent);padding:8px 12px;border-radius:10px;margin:0}
+.proto{font-size:12px;background:var(--accent-soft);color:var(--accent-ink);padding:8px 12px;border-radius:10px;margin:0}
 .hint{font-size:12px;color:var(--muted)}
 .view{display:flex;flex-direction:column;gap:14px}
 .rhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
@@ -153,6 +153,7 @@ h2{font-family:var(--display);font-weight:400;font-size:22px;margin:4px 0 0;text
 .btn input{display:none}
 .btn small{display:block;font-weight:400;font-size:11.5px;opacity:.8}
 :is(.btn,.cat,.tab,.tile,.goal,.pickhero,.cr,.rk,.chip,.ti):focus-visible,.btn:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+#ticketbar .tc:focus-visible{outline:3px solid var(--ink);outline-offset:-3px;border-radius:10px}
 /* ── 상세 ── */
 #detail{border:0;padding:0;width:100%;max-width:560px;height:min(94vh,940px);max-height:none;margin:auto auto 0;border-radius:20px 20px 0 0;background:var(--surface);color:var(--ink);overflow:auto}
 #detail::backdrop{background:rgba(0,0,0,.5)}
@@ -242,7 +243,7 @@ nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:
 .wct:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .wcseg{align-self:flex-start;flex-wrap:wrap;max-width:100%}
 .sortbar{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
-.sortbar button{flex:none;font:inherit;font-size:12.5px;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:5px 12px;cursor:pointer}
+.sortbar button{flex:none;font:inherit;font-size:12.5px;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:5px 14px;min-height:44px;cursor:pointer}
 .sortbar button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .sortbar button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .qrow{display:grid;grid-template-columns:64px 1fr;gap:8px;align-items:center}
@@ -440,23 +441,9 @@ function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeou
 let sample=null,aiImages=false;
 (async()=>{try{sample=await window.claude?.use?.("sample")}catch(e){}
   if(sample){const l=await sample.limits().catch(()=>null);aiImages=!!(l&&l.images)}})();
-async function aiCheckFood(file, m) {
-  const src = await shrink(file);
-  const { data, error } = await sb.functions.invoke("gemini-3.8-flash", {
-    body: { type: "food", imageBase64: src, menu: m }
-  });
-  if (error || !data) return { skipped: true };
-  return data;
-}
-
-async function aiCheckSold(file, m) {
-  const src = await shrink(file);
-  const { data, error } = await sb.functions.invoke("gemini-3.8-flash", {
-    body: { type: "sold", imageBase64: src, menu: m }
-  });
-  if (error || !data) return { skipped: true };
-  return data;
-}
+// 실제 구현은 sync.js의 callVerify (서버 함수 verify-photo 호출)
+let aiCheckFood = async () => ({ skipped: true });
+let aiCheckSold = async () => ({ skipped: true });
 const aiErr=e=>e&&e.code==="not_granted"?"AI 사용을 허용하지 않아 확인할 수 없어요":e&&e.code==="rate_limited"?"요청이 많아요. 잠시 후 다시 시도해 주세요":e&&e.code==="image_rejected"?"이 사진은 확인할 수 없어요. 다른 사진을 골라 주세요":"사진 확인에 실패했어요. 다시 시도해 주세요";
 function shrink(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const img=new Image();img.onerror=rej;img.onload=()=>{const w=Math.min(560,img.width),h=Math.round(img.height*w/img.width),c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);res(c.toDataURL("image/jpeg",.72))};img.src=fr.result};fr.readAsDataURL(file)})}
 
@@ -514,7 +501,7 @@ function renderTicketbar(){const so=MENUS.filter(m=>!avail(m)).length;$("#ticket
 function tile(m){
   const ph=st.photos[m.id],so=st.sold[m.id],r=rate(m.id,"all"),e=eatenToday(m.id);
   const badge=so?'<span class="badge sold">품절</span>':e?`<span class="badge done">${e.slot}</span>`:st.plans[m.id]?'<span class="badge plan">예정</span>':"";
-  return `<button class="tile${so?" sold":""}" data-open="${m.id}">${badge}<span class="tno"><span>${m.cat}</span><span>No.${m.id.slice(1).padStart(2,"0")}</span></span><span class="tt">${ph?`<img src="${ph.src}" alt="">`:esc(m.name[0])}</span><span class="perf" aria-hidden="true"></span><span class="tn">${esc(m.name)}</span><span class="tp">${won(m.price)}</span><span class="tr">${r.n?`<b>★</b> ${r.avg.toFixed(1)} (${r.n})`:"평가 없음"}</span></button>`;
+  return `<button class="tile${so?" sold":""}" data-open="${m.id}">${badge}<span class="tno" aria-hidden="true"><span>${m.cat}</span><span>No.${m.id.slice(1).padStart(2,"0")}</span></span><span class="tt" aria-hidden="true">${ph?`<img src="${ph.src}" alt="">`:esc(m.name[0])}</span><span class="perf" aria-hidden="true"></span><span class="tn">${esc(m.name)}</span><span class="tp">${won(m.price)}</span><span class="tr">${r.n?`<b>★</b> ${r.avg.toFixed(1)} (${r.n})`:"평가 없음"}</span></button>`;
 }
 function renderMenus(){
   const SORTS={low:["가격 낮은 순",(a,b)=>a.price-b.price],high:["가격 높은 순",(a,b)=>b.price-a.price],star:["별점 순",(a,b)=>{const x=rate(a.id,"all"),y=rate(b.id,"all");return (y.n?1:0)-(x.n?1:0)||y.avg-x.avg||y.n-x.n||a.price-b.price}]};
@@ -625,7 +612,7 @@ function renderDetail(){
     ${AI_LINE[m.id]?`<div class="panel ai"><em>AI 한줄평</em>${AI_LINE[m.id]}</div>`:""}
     <div class="panel"><h4>${mineR?"내 평가 수정":"별점과 코멘트 남기기"} <small>${e?"오늘 먹음 체크해서 '먹음 인증'으로 표시돼요":"전에 먹어 본 기억으로도 남길 수 있어요"}</small></h4>
       <div class="stars">${[1,2,3,4,5].map(n=>`<button type="button" data-star="${n}" class="${n<=draft.s?"on":""}" aria-label="${n}점">★</button>`).join("")}</div>
-      <span class="hint">별점만 눌러도 등록돼요. 아래는 모두 선택이에요.</span>
+      <span class="hint">별점만 골라도 등록할 수 있어요. 아래는 모두 선택이에요.</span>
       ${QUICK.filter(q=>!q.only||q.only(m)).map(q=>`<div class="qrow"><span class="ql">${q.label}</span><div class="qopts">${(q.optsFor?q.optsFor(m):q.opts).map(o=>`<button type="button" data-q="${q.k}" data-qv="${o}" aria-pressed="${draft.f[q.k]===o}">${o}</button>`).join("")}</div></div>`).join("")}
       <label for="rv-text" class="hint">한 줄 코멘트 (선택)</label>
       <textarea id="rv-text" placeholder="예) 양 많고 고기 넉넉함. 국은 조금 짜요">${esc(draft.t)}</textarea>
