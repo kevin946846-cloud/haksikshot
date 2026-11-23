@@ -83,6 +83,7 @@ test.describe.serial("일반 흐름", () => {
 
   test("가성비 투표: 추천 → 비추천 → 취소가 서버와 일치", async () => {
     await page.locator(".tab", { hasText: /^메뉴 추천$/ }).click();
+    await page.locator('[data-goal="value"]').click();   // 투표 버튼은 '가성비' 목표에서만 보임
     const up = page.locator('[data-vote="1"]').first();
     const id = await up.getAttribute("data-id");
     const down = page.locator(`[data-vote="-1"][data-id="${id}"]`);
