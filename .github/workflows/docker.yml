@@ -1,0 +1,39 @@
+name: docker
+
+# 깨끗한 컴퓨터(교수님 컴퓨터와 같은 조건)에서 이미지가 빌드되고 실제로 뜨는지 매번 확인
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 이미지 빌드
+        run: docker build -t haksikshot:ci .
+
+      - name: 기본 설정으로 실행
+        run: |
+          docker run -d --name app -p 8080:8080 haksikshot:ci
+          for i in $(seq 1 20); do curl -fs http://localhost:8080/healthz && break; sleep 1; done
+
+      - name: 화면과 스크립트 응답 확인
+        run: |
+          curl -fs http://localhost:8080/ | grep -q '오늘 <mark>뭐 먹지?</mark>'
+          curl -fs http://localhost:8080/sync.js | grep -q 'callVerify'
+          curl -fs http://localhost:8080/config.js | grep -q 'supabase.co'
+          curl -fsI http://localhost:8080/sync.js | grep -qi 'cache-control: public, max-age=600'
+          curl -fsI http://localhost:8080/index.html | grep -qi 'cache-control: public, max-age=0'
+
+      - name: 환경 변수로 다른 Supabase 지정
+        run: |
+          docker run -d --name app2 -p 8081:8080 -e SUPABASE_URL=https://example.supabase.co -e SUPABASE_ANON_KEY=test-key haksikshot:ci
+          for i in $(seq 1 20); do curl -fs http://localhost:8081/healthz && break; sleep 1; done
+          curl -fs http://localhost:8081/config.js | grep -q 'https://example.supabase.co'
+
+      - name: 로그
+        if: always()
+        run: docker logs app; docker logs app2 || true

@@ -1,0 +1,7 @@
+# 비밀 값(서비스 롤 키, Gemini 키 등)은 절대 커밋하지 않음
+.env
+.env.*
+supabase/.temp/
+supabase/.branches/
+node_modules/
+.DS_Store
