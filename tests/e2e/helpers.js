@@ -30,12 +30,12 @@ async function closeDialogs(page) {
 async function openMenu(page, id) {
   await closeDialogs(page);
   await page.locator(".tab", { hasText: /^메뉴$/ }).click();
-  const tile = page.locator(`[data-open="${id}"]`);
+  const tile = page.locator(`#menus [data-open="${id}"]`);
   if (!(await tile.isVisible())) {
     const cat = id[0] === "i" ? "일품" : id[0] === "y" ? "양식" : "분식";
     await page.locator(`.cat[data-c="${cat}"]`).click();
   }
-  await page.locator(`[data-open="${id}"]`).click();
+  await tile.click();
   await expect(page.locator("#detail")).toHaveAttribute("open", "");
 }
 

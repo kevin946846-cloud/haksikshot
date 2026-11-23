@@ -88,7 +88,9 @@ test.describe("크리티컬 케이스", () => {
 
       await a.locator(".tab", { hasText: /^내 입맛$/ }).click();
       await a.locator('[data-acct="make"]').click();
-      const code = (await a.locator("#acct").textContent()).match(/[0-9a-f]{4}(-[0-9a-f]{4}){3}/i)?.[0];
+      const CODE = /[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}/i;
+      await expect(a.locator("#acct")).toContainText(CODE, { timeout: 15_000 });   // 서버 함수 응답 후 표시
+      const code = (await a.locator("#acct").textContent()).match(CODE)?.[0];
       expect(code, "복구 코드가 화면에 보여야 함").toBeTruthy();
 
       await openApp(b);
@@ -127,7 +129,7 @@ test.describe("크리티컬 케이스", () => {
       await expect(page.locator("#menus .tile")).not.toHaveCount(0);
       await expect(page.locator("#toast")).toContainText(/서버에 연결하지 못했어요|불러오지 못했어요/, { timeout: 20_000 });
       // 로그인 전에 먹음 체크를 눌러도 앱이 멈추지 않고 안내만 함
-      await page.locator('[data-open="i4"]').click();
+      await page.locator('#menus [data-open="i4"]').click();
       await page.locator('#detail [data-a="eat"]').click();
       await page.locator('#detail [data-slot="점심"]').click();
       await expect(page.locator("#toast")).toBeVisible();

@@ -70,7 +70,7 @@ test.describe.serial("일반 흐름", () => {
     await expect(page.locator("#detail")).toContainText("E2E 테스트 <img src=x");
     expect(await db(page, () => window.__xss || 0)).toBe(0);
     await closeDialogs(page);
-    await expect(page.locator('[data-open="i4"] .tr')).toContainText("4.0");
+    await expect(page.locator('#menus [data-open="i4"] .tr')).toContainText("4.0");
   });
 
   test("먹음 체크 취소 → 서버에서 삭제, 후기의 먹음 인증 해제", async () => {
