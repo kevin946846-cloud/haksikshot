@@ -17,7 +17,7 @@ const REST_SVG = (() => {
   <clipPath id="${id}"><ellipse cx="24" cy="19.4" rx="18" ry="7.6"/></clipPath><g clip-path="url(#${id})">${inner}</g>
   ${steam?steamUp:""}</g>`;
   // 접시: 넓은 타원 접시, 내용물은 위에 올라감 (자르지 않음)
-  const plate=(inner,{handle=false,steam=false}={})=>`<g ${S} transform="translate(24 21) scale(1.18) translate(-24 -27)">
+  const plate=(inner,{handle=false,steam=false}={})=>`<g ${S} transform="translate(24 ${handle ? 23 : 22}) scale(${handle ? 1 : 1.08}) translate(-24 -27)">
   ${handle?`<path d="M42 26l5-3"/>`:""}
   <path ${T} d="M3 27c0 5.5 9.4 10 21 10s21-4.5 21-10z"/><path d="M3 27v1.4c0 5.5 9.4 10 21 10s21-4.5 21-10V27"/>
   <ellipse ${handle?B:'fill="var(--surface,#fff)"'} cx="24" cy="27" rx="21" ry="9.6"/><ellipse cx="24" cy="27" rx="21" ry="9.6"/>
@@ -51,7 +51,7 @@ const REST_SVG = (() => {
   return {
     // ── 면 ──
     ramen: bowl(`${noodles(13,5)}${friedEgg(18,18)}${sc([[30,16],[33,21],[27,22]])}`,{id:"r1"}),
-    ramen_rice: `<g transform="translate(-3 -2) scale(.9)">${bowl(`${noodles(13,5)}${sc([[20,16],[28,20],[24,22]])}`,{id:"r2"})}</g><g ${S}>${gonggi(37,33,.48)}</g>`,
+    ramen_rice: `<g transform="translate(-1 1) scale(.86)">${bowl(`${noodles(13,5)}${sc([[20,16],[28,20],[24,22]])}`,{id:"r2"})}</g><g ${S}>${gonggi(36.5,33,.44)}</g>`,
     cheese_ramen: bowl(`${noodles(13,5)}${cheese(22,18)}${sc([[31,16],[16,21],[33,21]])}`,{id:"r3"}),
     udon_eomuk: bowl(`${thick(14,4)}<path ${W} d="M25 14h9l-1 7h-9z"/><path d="M25 14h9l-1 7h-9z"/><path d="M26 16.4h7M25.6 18.6h7" stroke-width="1.1"/>${sc([[16,17],[19,22]])}`,{id:"u1"}),
     udon_shrimp: bowl(`${thick(14,4)}<path ${D} opacity=".45" d="M14 21c2-6 9-9 17-7l1 2c-6 0-11 2-14 7z"/><path d="M14 21c2-6 9-9 17-7l1 2c-6 0-11 2-14 7z"/><path d="M31 14l4-2M32 16l4 0" stroke-width="1.4"/><path d="M18 18l1 1M22 16l1 1M26 15l1 1" stroke-width="1.2"/>${sc([[33,21],[12,17]])}`,{id:"u2"}),
@@ -112,7 +112,7 @@ const POT_SVG = (() => {
   <ellipse cx="24" cy="19" rx="19" ry="9"/>
   ${broth?`<ellipse ${B} cx="24" cy="19.5" rx="16" ry="7"/>`:`<ellipse ${T} cx="24" cy="19.5" rx="16" ry="7"/>`}
   <clipPath id="tb-mouth"><ellipse cx="24" cy="19.5" rx="17.2" ry="7.8"/></clipPath><g clip-path="url(#tb-mouth)"><g transform="translate(24 19.5) scale(1.3) translate(-24 -21.4)">${inner}</g></g>
-  ${spoon?`<path d="M35 20l7-15"/><ellipse cx="43" cy="3.6" rx="2" ry="3" transform="rotate(27 43 3.6)"/>`:""}
+  ${spoon?`<path d="M35 21l6-13"/><ellipse cx="42" cy="5.6" rx="2" ry="3" transform="rotate(25 42 5.6)"/>`:""}
   ${steam?`<path d="M17 8c-1.4-1.6 1.4-2.6 0-4.2M24 7c-1.4-1.6 1.4-2.6 0-4.2M31 8c-1.4-1.6 1.4-2.6 0-4.2" stroke-width="1.8"/>`:""}</g>`;
   const tofu=(x,y,s=1)=>`<path fill="var(--tofu,#fff)" d="M${x-5*s} ${y}c-1-3 2-5 4-4 1-2 5-2 6 0 2-1 5 1 4 4-1 2-3 3-7 3s-6-1-7-3z"/><path d="M${x-5*s} ${y}c-1-3 2-5 4-4 1-2 5-2 6 0 2-1 5 1 4 4-1 2-3 3-7 3s-6-1-7-3z"/>`;
   const shrimp=(x,y)=>`<path d="M${x} ${y-3}c3 0 5 2 4 5-1 2-4 2-5 0"/><path d="M${x+1} ${y-1}l1 2"/>`;

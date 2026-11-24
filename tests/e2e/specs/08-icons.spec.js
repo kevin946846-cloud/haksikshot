@@ -37,3 +37,26 @@ test("메뉴 카드는 SVG 아이콘으로, 사진은 눌렀을 때 상세에서
     await expect(page.locator("#detail .hero img")).toHaveAttribute("alt", /치즈날치알밥 최근 사진/);
   } finally { await cleanup(page); }
 });
+
+test("메뉴 아이콘 43개가 모두 48×48 틀 안에 그려진다 (잘림 없음)", async ({ page }) => {
+  await openApp(page);
+  // 아이콘을 바깥 여백을 둔 큰 캔버스에 그려서, 틀 밖으로 나간 픽셀이 있는지 셈
+  const over = await db(page, async () => {
+    const out = [];
+    for (const m of MENUS) {
+      const N = 192, pad = 24;
+      const svg = foodIcon(m).replace('<svg class="fi"', `<svg xmlns="http://www.w3.org/2000/svg" width="${N + 2 * pad}" height="${N + 2 * pad}"`)
+        .replace('viewBox="0 0 48 48"', `viewBox="${-pad / 4} ${-pad / 4} ${48 + pad / 2} ${48 + pad / 2}"`)
+        .replace(/var\(--tofu,#fff\)/g, "#fff").replace(/currentColor/g, "#000");
+      const img = new Image(); img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg); await img.decode();
+      const c = document.createElement("canvas"); c.width = c.height = N + 2 * pad;
+      const g = c.getContext("2d"); g.drawImage(img, 0, 0);
+      const d = g.getImageData(0, 0, c.width, c.height).data; let n = 0;
+      for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++)
+        if (!(x >= pad && x < pad + N && y >= pad && y < pad + N) && d[(y * c.width + x) * 4 + 3] > 40) n++;
+      if (n) out.push(`${m.name}(${n})`);
+    }
+    return out;
+  });
+  expect(over, "틀 밖으로 나간 아이콘").toEqual([]);
+});
