@@ -44,12 +44,12 @@ h2{font-family:var(--display);font-weight:400;font-size:22px;margin:4px 0 0;text
 .perf{position:relative;border-top:2px dashed var(--line);margin:4px 2px 6px}
 .perf::before,.perf::after{content:"";position:absolute;top:-8px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:1px solid var(--line)}
 .perf::before{left:-16px}.perf::after{right:-16px}
-.tt{height:56px;border-radius:6px;overflow:hidden;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:24px;color:var(--accent);margin-bottom:4px}
+.tt{height:64px;border-radius:6px;overflow:hidden;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:24px;color:var(--accent);margin-bottom:4px}
 .tt{position:relative}
-.tt .fi{width:44px;height:44px;color:var(--accent)}   /* 메뉴 아이콘: 사진은 눌러서 상세에서 */
+.tt .fi{width:56px;height:56px;color:var(--accent)}   /* 메뉴 아이콘: 사진은 눌러서 상세에서 */
 .tt .hasph{position:absolute;right:4px;bottom:4px;display:grid;place-items:center;width:20px;height:20px;border-radius:999px;background:var(--surface);color:var(--accent);box-shadow:0 0 0 1px var(--line)}
 .tt .hasph .cam{width:13px;height:13px}
-.hero .big-ic{display:block;width:96px;height:96px;margin:0 auto 4px;color:var(--accent)}
+.hero .big-ic{display:block;width:110px;height:110px;margin:0 auto 4px;color:var(--accent)}
 .tn{font-weight:700;font-size:13px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em;word-break:keep-all}
 .tp{font-family:var(--display);font-size:16px;font-variant-numeric:tabular-nums}
 .tr{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -291,3 +291,6 @@ nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:
  @keyframes rise{from{transform:translateY(12px)}to{transform:none}}
 }
 .toast{position:fixed;left:50%;bottom:calc(72px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:13px;font-weight:700;z-index:20;max-width:calc(100% - 32px);text-align:center}
+
+/* 뚝배기 아이콘 속 두부·계란 흰 부분: 다크 모드에서도 밝게 */
+.fi,.big-ic{--tofu:#fffaf1}

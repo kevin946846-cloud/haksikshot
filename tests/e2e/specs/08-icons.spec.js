@@ -15,6 +15,11 @@ test("메뉴 카드는 SVG 아이콘으로, 사진은 눌렀을 때 상세에서
     const keys = await db(page, () => Object.fromEntries(["i6", "i4", "i8", "y3", "i11", "b11", "b6", "y1", "y7", "b4", "b2"].map((id) => [id, iconKey(byId(id))])));
     expect(keys).toEqual({ i6: "stew", i4: "albap", i8: "albap", y3: "rice", i11: "gukbap", b11: "noodle", b6: "kimbap", y1: "cutlet", y7: "omurice", b4: "tteok", b2: "plainrice" });
 
+    // 뚝배기 메뉴는 메뉴마다 다른 그림 (45도 구도, 입구 안 내용물)
+    const pots = await db(page, () => ["i1", "i2", "i6", "i7", "i9", "i13", "i11", "i12", "i4", "i5", "i8", "i10"].map((id) => potKey(byId(id).name)));
+    expect(new Set(pots).size).toBe(12);
+    expect(pots.every(Boolean)).toBe(true);
+
     // 사진 없는 메뉴: 상세에 큰 아이콘
     await openMenu(page, "i4");
     await expect(page.locator("#detail .hero svg.big-ic")).toBeVisible();
