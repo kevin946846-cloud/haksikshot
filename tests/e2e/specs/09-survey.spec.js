@@ -38,12 +38,6 @@ test("설문 제출 → 결과 집계 반영, 다시 내면 1명 그대로 수�
   expect(after.n).toBe(before + 1);
   expect(after.texts.good).toContain("E2E 설문 테스트: 아이콘이 좋아요 <b>굵게</b>");
 
-  // 결과 화면: 숫자가 보이고, 주관식 HTML은 글자로만
-  await page.getByRole("link", { name: "결과 보기" }).click();
-  await expect(page.locator("#k-n")).toHaveText(String(after.n));
-  await expect(page.locator("#t-good")).toContainText("<b>굵게</b>");
-  await expect(page.locator("#t-good b")).toHaveCount(0);
-
   // 다른 사람 응답은 읽거나 대신 쓸 수 없음
   const sec = await db(page, async () => ({
     others: (await sb.from("survey_responses").select("user_id").neq("user_id", me)).data.length,
@@ -51,5 +45,13 @@ test("설문 제출 → 결과 집계 반영, 다시 내면 1명 그대로 수�
     bad: (await sb.from("survey_responses").upsert({ user_id: me, answers: { sus: [9,3,3,3,3,3,3,3,3,3], nps: 5 } }, { onConflict: "user_id" })).error?.code,
   }));
   expect(sec).toEqual({ others: 0, forge: "42501", bad: "23514" });
+  // 결과 화면: 숫자가 보이고, 주관식 HTML은 글자로만
+  await page.getByRole("link", { name: "결과 보기" }).click();
+  await expect(page.locator("#k-n")).toHaveText(String(after.n));
+  await expect(page.locator("#t-good")).toContainText("<b>굵게</b>");
+  await expect(page.locator("#t-good b")).toHaveCount(0);
+
+  await page.goBack();                                     // 설문 화면(로그인 정보 있음)으로 돌아가 정리
+  await page.waitForFunction(() => typeof me !== "undefined" && !!me);
   await cleanup(page);
 });
