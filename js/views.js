@@ -64,7 +64,7 @@ function renderTicketbar(){const so=MENUS.filter(m=>!avail(m)).length,d=kst(),mm
 function tile(m){
   const ph=st.photos[m.id],so=st.sold[m.id],r=rate(m.id,"all"),e=eatenToday(m.id);
   const badge=so?'<span class="badge sold">품절</span>':e?`<span class="badge done">${e.slot}</span>`:st.plans[m.id]?'<span class="badge plan">예정</span>':"";
-  return `<button class="tile${so?" sold":""}" data-open="${m.id}">${badge}<span class="tno" aria-hidden="true"><span>${m.cat}</span><span>No.${m.id.slice(1).padStart(2,"0")}</span></span><span class="tt" aria-hidden="true">${ph?`<img src="${ph.src}" alt="">`:esc(m.name[0])}</span><span class="perf" aria-hidden="true"></span><span class="tn">${esc(m.name)}</span><span class="tp">${won(m.price)}</span><span class="tr">${r.n?`<b>${ICON.star}</b> ${r.avg.toFixed(1)} (${r.n})`:"평가 없음"}</span></button>`;
+  return `<button class="tile${so?" sold":""}" data-open="${m.id}">${badge}<span class="tno" aria-hidden="true"><span>${m.cat}</span><span>No.${m.id.slice(1).padStart(2,"0")}</span></span><span class="tt" aria-hidden="true">${foodIcon(m)}${ph?`<span class="hasph" title="사진 있음"><svg class="cam" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>`:""}</span><span class="perf" aria-hidden="true"></span><span class="tn">${esc(m.name)}</span><span class="tp">${won(m.price)}</span><span class="tr">${r.n?`<b>${ICON.star}</b> ${r.avg.toFixed(1)} (${r.n})`:"평가 없음"}</span></button>`;
 }
 function renderMenus(){
   const SORTS={low:["가격 낮은 순",(a,b)=>a.price-b.price],high:["가격 높은 순",(a,b)=>b.price-a.price],star:["별점 순",(a,b)=>{const x=rate(a.id,"all"),y=rate(b.id,"all");return (y.n?1:0)-(x.n?1:0)||y.avg-x.avg||y.n-x.n||a.price-b.price}]};
@@ -146,7 +146,7 @@ function renderDetail(){
   if(!openId)return;const m=byId(openId),ph=st.photos[m.id],rp=recentPhoto(m.id),so=st.sold[m.id],r=rate(m.id,"all"),b=busy[m.id],e=eatenToday(m.id),tm=todayMeals();
   $("#dbar-cat").textContent=`다래락 · ${m.cat}`;
   const hero=ph?`<div class="stamp"><span>${stampOf(ph.at)} 업로드</span>${ph.verified?'<span class="ok">AI 확인됨</span>':'<span>AI 미확인</span>'}</div><img src="${ph.src}" alt="${esc(m.name)} 최근 사진">`
-    :`<span class="big">${esc(m.name)}</span>아직 올라온 사진이 없어요<br>먹고 나서 첫 사진을 올려 주세요`;
+    :`${foodIcon(m,"fi big-ic")}<span class="big">${esc(m.name)}</span>아직 올라온 사진이 없어요<br>먹고 나서 첫 사진을 올려 주세요`;
   let actions="";
   if(e) actions=`<div class="status">오늘 ${e.slot}으로 먹음 체크했어요</div><div class="actions"><button class="btn" data-a="uneat">먹음 체크 취소</button></div>`;
   else if(so) actions=`<div class="actions"><button class="btn" data-a="restock">다시 있어요</button></div>`;

@@ -13,7 +13,7 @@ const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(M
 const roundName=n=>n===2?"결승":n+"강";
 function startWC(theme){wc={theme,round:shuffle(MENUS.filter(m=>m.price>1000).map(m=>m.id)).slice(0,16),next:[],i:0,champ:null,log:[]};showSplash();renderWC();const d=$("#wc");if(!d.open)d.showModal()}
 function wcCard(id,k){const m=byId(id),ph=st.photos[id],r=rate(id,"all");
-  return `<button class="wcc" data-wcpick="${k}"><span class="wci">${ph?`<img src="${ph.src}" alt="">`:esc(m.name[0])}</span><b>${esc(m.name)}</b><small>${won(m.price)} · ${m.cat}</small><small>${m.tags.map(t=>"#"+t).join(" ")}</small>${r.n?`<small>${ICON.star} ${r.avg.toFixed(1)}</small>`:""}</button>`}
+  return `<button class="wcc" data-wcpick="${k}"><span class="wci">${foodIcon(m)}</span><b>${esc(m.name)}</b><small>${won(m.price)} · ${m.cat}</small><small>${m.tags.map(t=>"#"+t).join(" ")}</small>${r.n?`<small>${ICON.star} ${r.avg.toFixed(1)}</small>`:""}</button>`}
 function renderWC(){
   if(!wc)return;
   const T=THEMES[wc.theme];
