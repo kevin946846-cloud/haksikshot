@@ -52,6 +52,13 @@ jobs:
           BASE_URL: http://localhost:8080
         run: npx playwright test
 
+      - name: 다시 띄워도 안전한지 (마이그레이션은 건너뛰어야 함)
+        working-directory: .
+        run: |
+          docker compose run --rm migrate | tee /tmp/migrate2.txt
+          ! grep -q "^적용" /tmp/migrate2.txt
+          grep -q "건너뜀" /tmp/migrate2.txt
+
       - name: 실패하면 서버 로그 보기
         if: failure()
         working-directory: .
