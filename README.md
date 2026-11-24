@@ -5,14 +5,14 @@
 
 ```
 index.html / sync.js / config.js     화면 + 서버 연동
-supabase/schema.sql                  테이블, 보안 규칙(RLS), 사진 저장소
+supabase/migrations/                 DB 구조 전체 (테이블, 보안 규칙, 함수, 사진 저장소)
 supabase/functions/verify-photo      사진·품절 제보 AI 확인 (서버에서 실행)
 ```
 
 ## 설정 순서
 
 1. **Supabase 프로젝트 만들기** (리전: Seoul). `Authentication > Sign In / Providers`에서 **Allow anonymous sign-ins**를 켭니다.
-2. **DB 만들기**: `SQL Editor`에 `supabase/schema.sql` 전체를 붙여넣고 Run.
+2. **DB 만들기**: `supabase/migrations/` 폴더의 파일을 이름 순서대로 `SQL Editor`에 붙여넣고 Run. (CLI가 있으면 `supabase db push`)
 3. **키 넣기**: `config.js`에 Project URL과 anon key를 넣습니다. (`Project Settings > API`)
 4. **AI 사진 확인** (선택, 없으면 사진은 '미확인'으로 올라가고 품절 제보는 막힘):
    [Google AI Studio](https://aistudio.google.com)에서 무료 Gemini 키를 발급받고
@@ -50,10 +50,10 @@ docker compose up -d --build
 
 | 무엇 | 어디에 | 효과 |
 | --- | --- | --- |
-| 마지막으로 받은 데이터 캐시 | 브라우저 localStorage (`haksikshot-snap-v1`) | 앱을 다시 열면 네트워크를 기다리지 않고 바로 그림, 그 뒤 새 데이터로 교체 |
+| 마지막으로 받은 데이터 캐시 | 브라우저 localStorage (`haksikshot-snap-v2`) | 앱을 다시 열면 네트워크를 기다리지 않고 바로 그림, 그 뒤 새 데이터로 교체 |
 | 스크립트 캐시 | `vercel.json`, `docker/nginx.conf` | `sync.js`·`config.js`는 10분 캐시, `index.html`은 항상 새 버전 확인 |
 | 백그라운드 탭 | `sync.js` | 탭이 안 보일 때는 30초마다 다시 받지 않음 |
-| DB 인덱스 | `supabase/perf-2026-11-23.sql` | 주간 집계(meals.created_at), 투표(votes.week), 품절·사진(created_at) |
+| DB 인덱스 | `supabase/migrations/…_baseline.sql` | 주간 집계(meals.created_at), 투표(votes.week), 품절·사진(created_at) |
 
 ## 서버가 지키는 규칙
 - 하루 3끼, 같은 메뉴 하루 1번 (DB 제약) / 1인 1메뉴 1평가
@@ -73,11 +73,21 @@ docker compose up -d --build
 - AI 확인은 1인 하루(한국 시간) 사진 5번, 품절 제보 10번까지입니다. Edge Function secret `FOOD_DAILY_LIMIT`, `SOLD_DAILY_LIMIT`로 바꿀 수 있습니다.
 - 사진이나 품절 증거가 바뀌면 예전 파일은 저장소에서 지웁니다. 표에서 가리키지 않는 파일(10분 지난 것)도 업로드 때마다 함께 정리합니다.
 
+## DB 구조 관리 (마이그레이션)
+
+DB 구조는 `supabase/migrations/` 폴더 하나에서 관리합니다. 파일 이름 앞의 숫자 순서대로 적용합니다.
+
+- `20261124013700_baseline.sql`: 2026-11-24 운영 DB를 그대로 뽑은 기준점. 빈 Postgres에 적용해 운영과 같은지 비교해 확인함
+- 그 뒤 파일: 기준점 이후 바뀐 것 하나씩
+- 규칙: 운영 DB를 대시보드에서 직접 고치지 않고, 항상 이 폴더에 파일을 추가한 뒤 적용 (예전에는 이게 섞여서 버그가 생겼음)
+- 예전에 흩어져 있던 SQL은 `supabase/archive/`에 참고용으로만 남김
+- PR마다 GitHub Actions(`db`)가 빈 Postgres(PGlite)에 이 폴더를 적용해 보고, RLS·권한·횟수 제한 같은 핵심 규칙을 확인 (`tests/db`)
+
 ## 데이터 받는 양 줄이기 (집계 함수)
 
 앱은 30초마다 서버 데이터를 다시 받습니다. 예전에는 후기 최대 3,000개, 월드컵 기록 최대 1,500판, 2주치 투표 전체를 받아 브라우저에서 평균을 계산했는데,
 지금은 DB 함수(`menu_rating`, `recent_reviews`, `vote_counts`, `wc_stats`)가 계산해서 **메뉴별 결과만** 보냅니다.
-데이터가 아무리 늘어도 받는 양은 "메뉴 수 × 몇 줄" 수준으로 고정됩니다. 후기 글은 메뉴별 최근 20개만 받습니다. (`supabase/perf-2026-11-24.sql`)
+데이터가 아무리 늘어도 받는 양은 "메뉴 수 × 몇 줄" 수준으로 고정됩니다. 후기 글은 메뉴별 최근 20개만 받습니다.
 
 ## 외부 CDN 없이 동작
 
