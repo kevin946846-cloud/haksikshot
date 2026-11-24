@@ -1,4 +1,4 @@
-// 메뉴 아이콘 12종 (SVG, 48×48, 선 굵기 2.2, 색은 currentColor → 글자색을 따라감)
+// 메뉴 아이콘 13종 (SVG, 48×48, 선 굵기 2.2, 색은 currentColor → 글자색을 따라감)
 // 카드에는 아이콘을 보여 주고, 사진은 카드를 눌러 상세에서 봄
 const FOOD_SVG = (() => {
   const S = 'fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"';
@@ -11,6 +11,8 @@ const FOOD_SVG = (() => {
     // 뚝배기 공통 모양: 둥근 몸통 + 넓은 입구 + 받침 접시
     // 찌개·뚝배기: 뚝배기 + 국물 + 김
     stew: `<g ${S}>${POT}<path d="M12 23c4 2 20 2 24 0"/>${steam(17)}</g>`,
+    // 국밥: 뚝배기 + 꽂힌 숟가락 + 김 (찌개와 구분)
+    gukbap: `<g ${S}>${POT}<path d="M12 23c4 2 20 2 24 0"/><path d="M29 22l7-14"/><ellipse cx="37.2" cy="6.6" rx="2.2" ry="3.2" transform="rotate(27 37.2 6.6)"/><path d="M14 10c-2 2.4 2 3.6 0 6M21 8c-2 2.4 2 3.6 0 6"/></g>`,
     // 알밥·돌솥비빔밥: 뚝배기 위로 봉긋한 밥 + 날치알
     albap: `<g ${S}>${POT}<path ${T} d="M11 22c1-6 6-9 13-9s12 3 13 9z"/><path d="M11 22c1-6 6-9 13-9s12 3 13 9"/><path d="M17 18h.01M21 15.5h.01M25 17h.01M29 15.5h.01M31 19h.01M22 19.5h.01" stroke-width="3"/></g>`,
     // 국밥·떡국·만두국: 넓은 그릇 + 숟가락
@@ -45,7 +47,8 @@ function iconKey(m) {
   if (/라면|국수|우동|칼국수|냉면|쫄면|짜계치|면/.test(n)) return "noodle";
   if (/알밥|돌솥/.test(n)) return "albap";   // 다래락은 알밥·돌솥비빔밥이 뚝배기에 나옴
   if (/찌개|뚝배기|순두부/.test(n)) return "stew";
-  if (/국밥|떡국|만두국|국$/.test(n)) return "soup";
+  if (/국밥/.test(n)) return "gukbap";   // 다래락 국밥은 뚝배기
+  if (/떡국|만두국|국$/.test(n)) return "soup";
   if (/오므라이스/.test(n)) return "omurice";
   if (/돈까스|까스|튀김/.test(n)) return "cutlet";
   if (/스테이크|함박/.test(n)) return "steak";
