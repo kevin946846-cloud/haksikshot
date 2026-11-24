@@ -79,7 +79,7 @@ function renderReco(){
   $("#reco-slot").textContent=slotUsed(s)?`오늘 ${s}은 이미 체크했어요`:`지금은 ${s} 시간`;
   $("#goals").innerHTML=Object.entries(GOALS).map(([k,v])=>`<button class="goal ${v.cls}" data-goal="${k}" aria-pressed="${k===goal}"><b>${v.label}</b><small>${v.sub}</small></button>`).join("");
   const v=$("#view-reco");v.className="view "+g.cls;
-  if(!top){$("#reco-hero").innerHTML=`<div class="empty">지금 추천할 수 있는 메뉴가 없어요</div>`;$("#reco-list").innerHTML="";return}
+  if(!top){$("#reco-hero").innerHTML=`<div class="empty">${BAP("sad","bap bap-e")}지금 추천할 수 있는 메뉴가 없어요</div>`;$("#reco-list").innerHTML="";return}
   const tn=nut(top),isV=goal==="value";
   const nums=isV?`<div><b>${top.off}%</b><span>시중가 대비 할인</span></div><div><b>${won(top.save)}</b><span>아끼는 돈</span></div><div><b>${won(top.price)}</b><span>학식 가격</span></div>`
     :`<div><b>${tn.protein}g</b><span>단백질</span></div><div><b>${tn.kcal}</b><span>kcal</span></div><div><b>${won(top.price)}</b><span>가격</span></div>`;
@@ -122,24 +122,24 @@ function renderTaste(){
   if(ts.length){
     const sc=Object.fromEntries(ts),tried=new Set([...st.meals.map(x=>x.id),...Object.keys(st.mine)]);
     const rec=MENUS.filter(m=>avail(m)&&!tried.has(m.id)&&m.price>1000).map(m=>({m,v:m.tags.reduce((s,t)=>s+(sc[t]||0),0)})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v||rate(b.m.id,"all").avg-rate(a.m.id,"all").avg).slice(0,5);
-    $("#taste-reco").innerHTML=rec.length?`<div class="chips">${rec.map(x=>`<button class="chip" data-open="${x.m.id}">${esc(x.m.name)} <small>${x.m.tags.filter(t=>sc[t]).map(t=>"#"+t).join(" ")}</small></button>`).join("")}</div>`:`<div class="empty">비슷한 맛의 메뉴는 다 먹어 봤어요</div>`;
-  } else $("#taste-reco").innerHTML=`<div class="empty">입맛 분석이 생기면 안 먹어 본 메뉴 중에서 골라 드려요</div>`;
+    $("#taste-reco").innerHTML=rec.length?`<div class="chips">${rec.map(x=>`<button class="chip" data-open="${x.m.id}">${esc(x.m.name)} <small>${x.m.tags.filter(t=>sc[t]).map(t=>"#"+t).join(" ")}</small></button>`).join("")}</div>`:`<div class="empty">${BAP("sad","bap bap-e")}비슷한 맛의 메뉴는 다 먹어 봤어요</div>`;
+  } else $("#taste-reco").innerHTML=`<div class="empty">${BAP("sad","bap bap-e")}입맛 분석이 생기면 안 먹어 본 메뉴 중에서 골라 드려요</div>`;
   const plans=Object.keys(st.plans).map(byId).filter(Boolean);
   $("#plans").innerHTML=plans.length?plans.map(m=>`<button class="chip" data-open="${m.id}">${esc(m.name)}${st.sold[m.id]?" <small>품절 제보됨</small>":""}</button>`).join(""):`<span class="hint">메뉴에서 '먹을래요'를 누르면 여기에 모여요</span>`;
   const hist=st.meals.slice().sort((a,b)=>b.at-a.at).slice(0,20);
-  $("#history").innerHTML=hist.length?`<div class="tl2">${hist.map(x=>{const m=byId(x.id);return m?`<button class="ti" data-open="${m.id}"><small>${dayLabel(x.at)} ${x.slot}</small><b>${esc(m.name)}</b><small>${won(m.price)} · ${nut(m).kcal}kcal${st.mine[m.id]?" · "+stars(st.mine[m.id].s):""}</small></button>`:""}).join("")}</div>`:`<div class="empty">먹음 체크한 메뉴가 날짜별로 쌓여요</div>`;
+  $("#history").innerHTML=hist.length?`<div class="tl2">${hist.map(x=>{const m=byId(x.id);return m?`<button class="ti" data-open="${m.id}"><small>${dayLabel(x.at)} ${x.slot}</small><b>${esc(m.name)}</b><small>${won(m.price)} · ${nut(m).kcal}kcal${st.mine[m.id]?" · "+stars(st.mine[m.id].s):""}</small></button>`:""}).join("")}</div>`:`<div class="empty">${BAP("sad","bap bap-e")}먹음 체크한 메뉴가 날짜별로 쌓여요</div>`;
 }
 // ── 렌더: 랭킹 ──
 function renderRank(){
   const sales=MENUS.map(m=>({m,v:weekSales(m.id)})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,10),max=sales[0]?sales[0].v:1;
-  $("#rank-sales").innerHTML=!sales.length?`<div class="empty">이번 주 먹음 체크가 쌓이면 순위가 생겨요</div>`:sales.map((x,i)=>`<button class="rk" data-open="${x.m.id}"><span class="n">${i+1}</span><span class="m"><b>${esc(x.m.name)}</b><small>${x.m.cat} · ${won(x.m.price)}</small><span class="bar"><i style="width:${Math.round(x.v/max*100)}%"></i></span></span><span class="v">${x.v}그릇</span></button>`).join("");
+  $("#rank-sales").innerHTML=!sales.length?`<div class="empty">${BAP("sad","bap bap-e")}이번 주 먹음 체크가 쌓이면 순위가 생겨요</div>`:sales.map((x,i)=>`<button class="rk" data-open="${x.m.id}"><span class="n">${i+1}</span><span class="m"><b>${esc(x.m.name)}</b><small>${x.m.cat} · ${won(x.m.price)}</small><span class="bar"><i style="width:${Math.round(x.v/max*100)}%"></i></span></span><span class="v">${x.v}그릇</span></button>`).join("");
   const rs=MENUS.map(m=>({m,r:rate(m.id,rankScope)})).filter(x=>x.r.n>=5).sort((a,b)=>b.r.avg-a.r.avg||b.r.n-a.r.n).slice(0,10);
-  $("#rank-star").innerHTML=rs.length?rs.map((x,i)=>`<button class="rk" data-open="${x.m.id}"><span class="n">${i+1}</span><span class="m"><b>${esc(x.m.name)}</b><small>평가 ${x.r.n}개 · ${x.m.cat}</small></span><span class="v"><span style="color:var(--star)">${ICON.star}</span> ${x.r.avg.toFixed(2)}</span></button>`).join(""):`<div class="empty">아직 순위를 매길 만큼 평가가 없어요</div>`;
+  $("#rank-star").innerHTML=rs.length?rs.map((x,i)=>`<button class="rk" data-open="${x.m.id}"><span class="n">${i+1}</span><span class="m"><b>${esc(x.m.name)}</b><small>평가 ${x.r.n}개 · ${x.m.cat}</small></span><span class="v"><span style="color:var(--star)">${ICON.star}</span> ${x.r.avg.toFixed(2)}</span></button>`).join(""):`<div class="empty">${BAP("sad","bap bap-e")}아직 순위를 매길 만큼 평가가 없어요</div>`;
   document.querySelectorAll("#rank-seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.rank===rankScope));
   $("#wc-themes").innerHTML=Object.entries(THEMES).map(([k,t])=>`<button class="wct" data-wcstart="${k}"><b>${t.title}</b><small>${t.sub}</small><span>시작하기</span></button>`).join("");
   $("#wc-seg").innerHTML=Object.entries(THEMES).map(([k,t])=>`<button data-wcrank="${k}" aria-pressed="${k===wcTheme}">${t.short}</button>`).join("");
   const ws=Object.entries(wcStats(wcTheme)).map(([id,x])=>({m:byId(id),x,g:x.w+x.l})).filter(r=>r.m&&r.x.w>0).sort((a,b)=>b.x.champ-a.x.champ||b.x.w/b.g-a.x.w/a.g||b.x.w-a.x.w).slice(0,10);
-  $("#rank-wc").innerHTML=ws.length?ws.map((r,i)=>`<button class="rk" data-open="${r.m.id}"><span class="n">${i+1}</span><span class="m"><b>${esc(r.m.name)}</b><small>1:1 승률 ${Math.round(r.x.w/r.g*100)}% (${r.x.w}승 ${r.x.l}패)</small></span><span class="v">우승 ${r.x.champ}회</span></button>`).join(""):`<div class="empty">월드컵을 한 판 하면 순위가 생겨요</div>`;
+  $("#rank-wc").innerHTML=ws.length?ws.map((r,i)=>`<button class="rk" data-open="${r.m.id}"><span class="n">${i+1}</span><span class="m"><b>${esc(r.m.name)}</b><small>1:1 승률 ${Math.round(r.x.w/r.g*100)}% (${r.x.w}승 ${r.x.l}패)</small></span><span class="v">우승 ${r.x.champ}회</span></button>`).join(""):`<div class="empty">${BAP("sad","bap bap-e")}월드컵을 한 판 하면 순위가 생겨요</div>`;
 }
 // ── 렌더: 상세 ──
 function renderDetail(){

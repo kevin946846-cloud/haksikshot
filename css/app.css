@@ -294,3 +294,13 @@ nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:
 
 /* 뚝배기 아이콘 속 두부·계란 흰 부분: 다크 모드에서도 밝게 */
 .fi,.big-ic{--tofu:#fffaf1}
+
+/* 캐릭터 밥톨이 */
+.bap{display:block;flex:none}
+.bap-hero{display:inline-block;width:52px;height:52px;vertical-align:-6px;margin-left:6px}
+.bap-hero .bap{width:100%;height:100%;animation:bap-bob 2.6s ease-in-out infinite}
+.empty{display:flex;flex-direction:column;align-items:center;gap:6px}
+.bap-e{width:56px;height:56px}
+.toast .bap-t{display:inline-block;width:22px;height:22px;vertical-align:-6px;margin-right:6px}
+@keyframes bap-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px) rotate(-4deg)}}
+@media (prefers-reduced-motion:reduce){.bap-hero .bap{animation:none}}
