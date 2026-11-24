@@ -37,12 +37,19 @@ const check = async (name, sql, want) => {
 };
 await check("모든 public 테이블에 RLS", `select count(*)::int from pg_class where relnamespace='public'::regnamespace and relkind='r' and not relrowsecurity`, 0);
 await check("메뉴 43개", `select count(*)::int from public.menus where on_sale`, 43);
-await check("앱 테이블 10개", `select count(*)::int from pg_class where relnamespace='public'::regnamespace and relkind='r'`, 10);
+await check("앱 테이블 11개", `select count(*)::int from pg_class where relnamespace='public'::regnamespace and relkind='r'`, 11);
 await check("AI 횟수 함수는 서버만 실행", `select has_function_privilege('authenticated','public.ai_quota_take(uuid,text,integer)','execute')`, false);
 await check("저장소에 앱 직접 업로드 정책 없음", `select count(*)::int from pg_policies where schemaname='storage'`, 0);
 // AI 횟수 제한이 실제로 5번에서 막히는지
 await db.exec(`insert into auth.users values ('11111111-1111-1111-1111-111111111111')`);
 await check("하루 사진 확인 5번 제한", `select array_agg(public.ai_quota_take('11111111-1111-1111-1111-111111111111','food',5)) from generate_series(1,6)`, [true, true, true, true, true, false]);
+// 설문 SUS 점수 계산 (모두 3점 = 50점, 최고 응답 = 100점)
+await check("SUS 보통 50점", `select public.sus_score('{"sus":[3,3,3,3,3,3,3,3,3,3]}')::int`, 50);
+await check("SUS 최고 100점", `select public.sus_score('{"sus":[5,1,5,1,5,1,5,1,5,1]}')::int`, 100);
+try { await db.exec(`insert into public.survey_responses(user_id, answers) values ('11111111-1111-1111-1111-111111111111', '{"sus":[6,1,1,1,1,1,1,1,1,1],"nps":5}')`); fails.push("SUS 범위"); console.log("✘ SUS 6점이 들어감"); }
+catch { console.log("✓ SUS 6점 응답 거절"); }
+await db.exec(`insert into public.survey_responses(user_id, answers) values ('11111111-1111-1111-1111-111111111111', '{"sus":[4,2,4,2,4,2,4,2,4,2],"nps":9,"used":["메뉴판"],"good":"좋아요"}')`);
+await check("설문 집계: 1명, SUS 75, NPS 100", `select (s->>'n')||'/'||(s->>'sus_avg')||'/'||(s->'nps'->>'score') from public.survey_summary() s`, "1/75.0/100");
 // 후기 별점 범위
 try { await db.exec(`insert into public.reviews(user_id, menu_id, stars) values ('11111111-1111-1111-1111-111111111111','i4',6)`); fails.push("별점 6점 거절"); console.log("✘ 별점 6점이 들어감"); }
 catch { console.log("✓ 별점 6점 insert 거절"); }

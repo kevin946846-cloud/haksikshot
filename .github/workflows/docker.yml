@@ -24,7 +24,9 @@ jobs:
         run: |
           curl -fs http://localhost:8080/ | grep -q '오늘<br>뭐 먹지?'
           curl -fs http://localhost:8080/sync.js | grep -q 'callVerify'
-          for f in css/app.css js/data.js js/core.js js/icons.js js/views.js js/worldcup.js js/events.js; do curl -fs http://localhost:8080/$f | head -c 200 | grep -qiv "<!doctype" || { echo "없음: $f"; exit 1; }; done   # 없는 파일은 index.html로 대체되므로 내용으로 확인
+          curl -fs http://localhost:8080/survey.html | grep -q '학식샷 사용 평가'
+          curl -fs http://localhost:8080/results.html | grep -q '사용 평가 결과'
+          for f in css/survey.css js/survey.js js/results.js css/app.css js/data.js js/core.js js/icons.js js/views.js js/worldcup.js js/events.js; do curl -fs http://localhost:8080/$f | head -c 200 | grep -qiv "<!doctype" || { echo "없음: $f"; exit 1; }; done   # 없는 파일은 index.html로 대체되므로 내용으로 확인
           curl -fs http://localhost:8080/config.js | grep -q 'supabase.co'
           curl -fs http://localhost:8080/vendor/supabase-js-2.45.4.min.js | grep -q 'createClient'
           curl -fs http://localhost:8080/vendor/fonts/fonts.css | grep -q "font-family: 'Jua'"

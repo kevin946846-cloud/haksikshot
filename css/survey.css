@@ -1,0 +1,45 @@
+/* 사용 평가 설문·결과 화면 (앱 색·글꼴 변수를 그대로 씀) */
+.sv{padding-bottom:40px}
+.sv h1 small{font-family:var(--body);font-size:15px;color:var(--muted);margin-left:6px}
+.sv a{color:var(--accent-ink)}
+.sv-intro p{margin:6px 0 10px;color:var(--muted);font-size:14px}
+.sv-prog{height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+.sv-prog span{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+#sv{display:flex;flex-direction:column;gap:14px}
+.sv-card{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:14px 14px 16px;margin:0;min-width:0}
+.sv-card legend{font-family:var(--display);font-size:20px;padding:0 4px}
+.sv-card legend small{font-family:var(--body);font-size:12px;color:var(--muted);margin-left:4px}
+.q p,.lk p{margin:10px 0 6px;font-weight:700;font-size:14px}
+.lk p b{color:var(--sold)}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.chip-o input,.lk-row input{position:absolute;opacity:0;pointer-events:none}
+.chip-o span{display:inline-block;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);font-size:13.5px;cursor:pointer}
+.chip-o input:checked+span{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:700}
+.chip-o input:focus-visible+span,.lk-row input:focus-visible+span{outline:3px solid var(--accent);outline-offset:2px}
+.lk{border-top:1px dashed var(--line);padding-top:2px}
+.lk:first-child{border-top:0}
+.lk-row{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px}
+.lk-row label{display:block}
+.lk-row span{display:grid;place-items:center;min-height:40px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-weight:700;cursor:pointer;font-variant-numeric:tabular-nums}
+.lk-row input:checked+span{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.nps .lk-row span{min-height:36px;font-size:13px}
+.lk-ends{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin:6px 2px 0}
+.open{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:14px;margin-top:10px}
+.open textarea{font:inherit;font-weight:400;font-size:14px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg);color:var(--ink);resize:vertical}
+.sv-err{margin:0;color:var(--sold);font-weight:700;font-size:14px}
+.sv-submit{min-height:52px;font-size:16px}
+.sv-done{text-align:center;padding:30px 0}
+.sv-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.sv-links .btn{text-decoration:none}
+/* 결과 화면 */
+.rs-kpi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.rs-kpi div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.rs-kpi b{display:block;font-family:var(--display);font-weight:400;font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}
+.rs-kpi span{font-size:12.5px;color:var(--muted)}
+.rs-bars{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.rs-bars li{display:grid;grid-template-columns:8.5em 1fr 3.2em;gap:8px;align-items:center;font-size:13.5px}
+.rs-bars .bar{height:12px;border-radius:99px;background:var(--line);overflow:hidden}
+.rs-bars .bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.rs-bars em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.rs-texts{margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:4px}
+.rs-empty{color:var(--muted);font-size:14px}

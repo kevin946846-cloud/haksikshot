@@ -294,3 +294,4 @@ nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:
 
 /* 뚝배기 아이콘 속 두부·계란 흰 부분: 다크 모드에서도 밝게 */
 .fi,.big-ic{--tofu:#fffaf1}
+.proto a{color:inherit;font-weight:700;text-underline-offset:2px}
