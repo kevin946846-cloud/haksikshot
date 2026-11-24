@@ -51,6 +51,12 @@ async function callVerify(kind, file, m) {
 aiCheckFood = async (file, m) => { const r = await callVerify("food", file, m); if (!r.ok) return { match: false, reason: r.reason }; return r.verified ? { match: true, reason: r.reason, portion: r.portion, nutrition: r.nutrition } : { skipped: true } };
 aiCheckSold = async (file, m) => { const r = await callVerify("sold", file, m); return r.ok ? { ok: true, reason: r.reason } : { ok: false, reason: r.reason } };
 
+// 메뉴판은 자주 안 바뀌므로 10분에 한 번만 받음 (나머지 데이터는 30초마다)
+let menuRows = null, menusAt = 0;
+const menusQuery = () => Date.now() - menusAt < 10 * 60e3 && menuRows ? Promise.resolve({ data: menuRows })
+  : sb.from("menus").select("id,category,name,price,market_price,kcal,protein,carbs,sugar,tags,sort_order,on_sale").order("sort_order")
+      .then(r => { if (!r.error) { menuRows = r.data; menusAt = Date.now() } return r });
+
 async function hydrate() {
   await Promise.allSettled([...Q]);
   try {
@@ -67,7 +73,8 @@ async function hydrate() {
       sb.from("votes").select("week,menu_id,v").eq("user_id", me).in("week", wks),   // 내 투표
       sb.rpc("vote_counts", { p_weeks: wks }),     // 남들 투표: 주차·메뉴별 추천/비추천 수
       sb.from("rank_hist").select("week,ord").in("week", wks),
-      sb.rpc("wc_stats")]);                        // 월드컵: 테마·메뉴별 승/패/우승 수
+      sb.rpc("wc_stats"),                          // 월드컵: 테마·메뉴별 승/패/우승 수
+      menusQuery()]);                              // 메뉴판 (가격·판매 여부)
     res.forEach(r => { if (r.error) throw r.error });
     const data = res.map(r => r.data || []);
     const sig = JSON.stringify(data);
@@ -78,8 +85,8 @@ async function hydrate() {
 }
 
 // ── 캐시: 마지막으로 받은 서버 데이터를 기기에 저장 → 다음에 열 때 네트워크를 기다리지 않고 바로 그림 ──
-const SNAP = "haksikshot-snap-v2";   // v2: 집계 결과 형식
-function saveSnap(data) { try { localStorage.removeItem("haksikshot-snap-v1"); localStorage.setItem(SNAP, JSON.stringify({ me, at: Date.now(), data })) } catch (_) { } }
+const SNAP = "haksikshot-snap-v3";   // v3: 메뉴판 포함
+function saveSnap(data) { try { localStorage.removeItem("haksikshot-snap-v1"); localStorage.removeItem("haksikshot-snap-v2"); localStorage.setItem(SNAP, JSON.stringify({ me, at: Date.now(), data })) } catch (_) { } }
 function loadSnap() {
   try {
     const s = JSON.parse(localStorage.getItem(SNAP) || "null");
@@ -88,8 +95,9 @@ function loadSnap() {
   return false;
 }
 
-function applySnap([my, rt, rc, ph, so, ml, ws, mv, vc, rh, wcs]) {
+function applySnap([my, rt, rc, ph, so, ml, ws, mv, vc, rh, wcs, mn]) {
   try {
+    applyMenus(mn);   // 메뉴판 먼저 (아래 계산이 메뉴 목록을 씀)
     const now = Date.now(), t = x => new Date(x).getTime();
 
     st.mine = {}; Object.keys(SEED_RV).forEach(k => delete SEED_RV[k]); Object.keys(RATE).forEach(k => delete RATE[k]);

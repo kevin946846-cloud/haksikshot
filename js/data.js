@@ -1,4 +1,5 @@
-// 메뉴 데이터: 메뉴 43개, 맛 태그, 시중 가격 (서버 menus 표가 있으면 sync.js가 덮어씀)
+// 메뉴 데이터: 기본 메뉴 43개, 맛 태그, 시중 가격
+// 이 목록은 첫 화면과 서버가 안 될 때용. 서버 menus 표를 받으면 applyMenus()가 그 내용으로 바꿈
 const M=(id,cat,name,price,n)=>({id,cat,name,price,n:{kcal:n[0],protein:n[1],carbs:n[2],sugar:n[3]}});
 const MENUS=[
  M("i1","일품","해물순두부찌개",5500,[520,28,70,6]),M("i2","일품","고기순두부찌개",5500,[600,32,70,6]),
@@ -25,7 +26,8 @@ const MENUS=[
  M("b19","분식","칼국수",4500,[520,16,95,3]),M("b20","분식","물냉면",5000,[480,15,95,12]),
  M("b21","분식","물비빔냉면",5000,[520,15,100,18])
 ];
-const byId=id=>MENUS.find(m=>m.id===id);
+const MENU_ALL={};   // 판매 중단된 메뉴까지 포함 (예전 기록의 메뉴 이름 찾기용)
+const byId=id=>MENU_ALL[id];
 // ── 다른 학생 후기·주간 판매 수·별점 통계 (실제 데이터가 모이면 채워짐) ──
 const SEED_RV={};
 const AI_LINE={};
@@ -43,4 +45,20 @@ MENUS.forEach(m=>m.tags=(TAGS[m.id]||"").split(" ").filter(Boolean));
 const MARKET={i1:10000,i2:10000,i3:11000,i4:9000,i5:10000,i6:9500,i7:11000,i8:10000,i9:10000,i10:11000,i11:10000,i12:10000,i13:12000,
  y1:10000,y2:12000,y3:7500,y4:9000,y5:15000,y6:12000,y7:9500,y8:12000,y9:11000,
  b1:5500,b2:1000,b3:11000,b4:5000,b5:7000,b6:3500,b7:5000,b8:5500,b9:5000,b10:7000,b11:5000,b12:5500,b13:7000,b14:9000,b15:6000,b16:9000,b17:9000,b18:7000,b19:9000,b20:10000,b21:10000};
-MENUS.forEach(m=>{m.market=MARKET[m.id]||m.price;m.off=Math.round((1-m.price/m.market)*100);m.save=m.market-m.price});
+const priced=m=>{m.off=Math.round((1-m.price/m.market)*100);m.save=m.market-m.price};
+MENUS.forEach(m=>{m.market=MARKET[m.id]||m.price;priced(m);MENU_ALL[m.id]=m});
+
+// 서버 menus 표 → 메뉴판. 가격·이름·영양·태그를 바꾸고, 새 메뉴는 추가, on_sale=false면 메뉴판에서 뺌
+function applyMenus(rows){
+  if(!Array.isArray(rows)||!rows.length)return;
+  const next=[];
+  rows.forEach(r=>{
+    if(!/^[iyb]\d{1,2}$/.test(r.id)||!["일품","양식","분식"].includes(r.category)||!(r.price>0))return;
+    const m=MENU_ALL[r.id]||(MENU_ALL[r.id]=M(r.id,r.category,r.name,r.price,[0,0,0,0]));
+    m.cat=r.category;m.name=r.name;m.price=r.price;m.market=r.market_price||r.price;
+    m.n={kcal:r.kcal??m.n.kcal,protein:r.protein??m.n.protein,carbs:r.carbs??m.n.carbs,sugar:r.sugar??m.n.sugar};
+    m.tags=Array.isArray(r.tags)?r.tags:m.tags||[];priced(m);
+    if(r.on_sale!==false)next.push(m);
+  });
+  if(next.length)MENUS.splice(0,MENUS.length,...next);
+}
