@@ -3,6 +3,22 @@
 다래락 학식 메뉴의 실제 사진·평가·품절 정보를 모두가 함께 채우는 웹 서비스.
 화면은 정적 HTML, 데이터·사진·익명 로그인·AI 확인은 Supabase, 배포는 Vercel.
 
+**바로 써 보기: https://haksikshot.vercel.app**
+
+<p>
+  <img src="docs/screenshots/home.png" width="240" alt="첫 화면: 식권 발권기 모양 히어로">
+  <img src="docs/screenshots/menu.png" width="240" alt="메뉴판: 메뉴마다 다른 SVG 아이콘">
+  <img src="docs/screenshots/detail.png" width="240" alt="메뉴 상세: 사진이 있으면 사진, 없으면 큰 아이콘">
+</p>
+
+### 메뉴 아이콘
+
+메뉴 카드는 SVG 아이콘으로 보여 주고, 실제 사진은 카드를 눌러 상세 화면에서 봅니다.
+아이콘 43개는 45도 위에서 내려다본 구도로, 그릇(뚝배기·면 그릇·접시·철판·공기)과 그 안의 내용물로 메뉴를 구분합니다.
+메뉴 이름으로 자동 선택되므로 DB에 새 메뉴를 추가해도 가장 가까운 그림이 나옵니다. (`js/icons.js`)
+
+<img src="docs/screenshots/icons.png" width="720" alt="메뉴 아이콘 43개 모음">
+
 ```
 index.html                           화면 뼈대 (HTML만)
 css/app.css                          스타일
