@@ -1,5 +1,6 @@
 # 학식샷: 정적 화면(index.html, css/, js/, sync.js, config.js)을 nginx로 띄우는 이미지
-# 데이터·로그인·AI 확인은 Supabase 클라우드를 그대로 씀 → 인터넷만 되면 어느 컴퓨터에서나 같은 화면
+# docker compose로 띄우면 SUPABASE_URL/SUPABASE_ANON_KEY가 로컬 백엔드(API 게이트웨이)로 들어가 운영 DB를 쓰지 않음
+# 이미지만 단독으로 띄우면 저장소의 config.js(운영 Supabase 공개 키)를 그대로 씀
 # 라이브러리(supabase-js)와 글꼴은 vendor/에 들어 있어 CDN이 막힌 학교망에서도 화면이 뜸
 FROM nginx:1.27-alpine
 
