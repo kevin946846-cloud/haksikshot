@@ -16,9 +16,9 @@ test("메뉴 카드는 SVG 아이콘으로, 사진은 눌렀을 때 상세에서
     expect(keys).toEqual({ i6: "stew", i4: "albap", i8: "albap", y3: "rice", i11: "gukbap", b11: "noodle", b6: "kimbap", y1: "cutlet", y7: "omurice", b4: "tteok", b2: "plainrice" });
 
     // 메뉴 43개가 모두 서로 다른 그림 (45도 구도, 그릇 + 내용물)
-    const keys = await db(page, () => MENUS.map((m) => potKey(m.name) || restKey(m.name)));
-    expect(keys.every(Boolean)).toBe(true);
-    expect(new Set(keys).size).toBe(keys.length);
+    const all = await db(page, () => MENUS.map((m) => potKey(m.name) || restKey(m.name)));
+    expect(all.every(Boolean)).toBe(true);
+    expect(new Set(all).size).toBe(all.length);
     // 이름으로 못 찾는 새 메뉴도 종류별 대표 그림이 나옴
     expect(await db(page, () => foodIcon(M("b30", "분식", "짬뽕", 6000, [0, 0, 0, 0])).includes("<g"))).toBe(true);
 
