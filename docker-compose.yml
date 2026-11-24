@@ -1,11 +1,194 @@
+# 학식샷 전체를 내 컴퓨터에서: docker compose up -d → http://localhost:8080
+#
+#   web        화면(nginx) + API 게이트웨이  ← 브라우저가 붙는 유일한 주소
+#   rest       DB를 API로 (PostgREST)        ← 앱의 sb.from(...), sb.rpc(...)
+#   auth       익명 로그인 (GoTrue)
+#   storage    사진 저장
+#   functions  서버 함수 (사진 AI 확인 verify-photo)
+#   db         Postgres (Supabase 이미지)
+#   migrate    처음 뜰 때 supabase/migrations + seed.sql 적용 후 종료
+#
+# 운영(haksikshot.vercel.app)은 같은 구성을 Supabase 클라우드가 대신 돌림. 코드와 DB 구조는 같음.
+# 이미지·설정은 Supabase 공식 self-hosting 구성(https://github.com/supabase/supabase/tree/master/docker)에서
+# 학식샷이 쓰는 것만 골랐음 (관리 화면·실시간·로그 분석 등은 뺌 → 실시간 갱신 대신 30초마다 다시 받기로 동작)
+#
+# 아래 키는 로컬 전용 값(공개돼도 되는 값)이라 기본값으로 넣어 둠. 운영 키와 다름.
+# 사진 AI 확인을 쓰려면 .env 파일에 GEMINI_API_KEY=... 를 넣기 (없으면 사진은 '미확인'으로 올라감)
+
+x-db-env: &db-env
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-haksikshot-local-postgres-password}
+
+x-keys: &keys
+  JWT_SECRET: ${JWT_SECRET:-haksikshot-local-only-jwt-secret-not-for-production-0001}
+  ANON_KEY: ${ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlLWxvY2FsIiwiaWF0IjoxNzk1MzkyMDAwLCJleHAiOjQxMDI0NDQ4MDB9.bvfQhf4DA0c9mdanM-_6efTRaWrGZDvzV5h-GdCi3jU}
+  SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UtbG9jYWwiLCJpYXQiOjE3OTUzOTIwMDAsImV4cCI6NDEwMjQ0NDgwMH0.7fpydY-2sNx3kgGiDwtZ-xhWuryC0cI4kF7Qw07uNKw}
+
 services:
   web:
     build: .
     image: haksikshot:latest
     ports:
-      - "8080:8080"
-    # 다른 Supabase 프로젝트로 띄우려면 아래 두 줄의 주석을 풀고 값을 넣기 (공개 anon 키만, 비밀 키는 넣지 말 것)
-    # environment:
-    #   SUPABASE_URL: https://xxxx.supabase.co
-    #   SUPABASE_ANON_KEY: eyJ...
+      - "${WEB_PORT:-8080}:8080"
+    environment:
+      # 화면이 붙을 Supabase 주소 = 자기 자신 (게이트웨이가 백엔드로 넘겨 줌)
+      SUPABASE_URL: ${PUBLIC_URL:-http://localhost:8080}
+      SUPABASE_ANON_KEY: ${ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlLWxvY2FsIiwiaWF0IjoxNzk1MzkyMDAwLCJleHAiOjQxMDI0NDQ4MDB9.bvfQhf4DA0c9mdanM-_6efTRaWrGZDvzV5h-GdCi3jU}
+    volumes:
+      - ./docker/api-gateway.conf:/etc/nginx/haksikshot.d/api-gateway.conf:ro
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      rest: { condition: service_healthy }
+      auth: { condition: service_healthy }
+      storage: { condition: service_healthy }
+      functions: { condition: service_started }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     restart: unless-stopped
+
+  db:
+    image: supabase/postgres:17.6.1.136
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    environment:
+      <<: *db-env
+      POSTGRES_HOST: /var/run/postgresql
+      POSTGRES_DB: postgres
+      PGPORT: 5432
+      POSTGRES_PORT: 5432
+      PGPASSWORD: ${POSTGRES_PASSWORD:-haksikshot-local-postgres-password}
+      PGDATABASE: postgres
+      JWT_EXP: 3600
+    volumes:
+      - ./docker/supabase/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+      - ./docker/supabase/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
+      - db-data:/var/lib/postgresql/data
+      - db-config:/etc/postgresql-custom
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  auth:
+    image: supabase/gotrue:v2.198.0
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${PUBLIC_URL:-http://localhost:8080}
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD:-haksikshot-local-postgres-password}@db:5432/postgres
+      GOTRUE_SITE_URL: ${PUBLIC_URL:-http://localhost:8080}
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: "true"   # 학식샷은 익명 로그인만 씀
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "false"
+      GOTRUE_EXTERNAL_PHONE_ENABLED: "false"
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_SECRET: ${JWT_SECRET:-haksikshot-local-only-jwt-secret-not-for-production-0001}
+      GOTRUE_RATE_LIMIT_ANONYMOUS_USERS: 1000   # 로컬 테스트가 익명 계정을 많이 만들어도 막히지 않게
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9999/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  rest:
+    image: postgrest/postgrest:v14.18
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD:-haksikshot-local-postgres-password}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_DB_MAX_ROWS: 1000
+      PGRST_JWT_SECRET: ${JWT_SECRET:-haksikshot-local-only-jwt-secret-not-for-production-0001}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET:-haksikshot-local-only-jwt-secret-not-for-production-0001}
+      PGRST_APP_SETTINGS_JWT_EXP: 3600
+      PGRST_ADMIN_SERVER_PORT: 3001
+    healthcheck:
+      test: ["CMD", "postgrest", "--ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  storage:
+    image: supabase/storage-api:v1.98.6
+    depends_on:
+      db: { condition: service_healthy }
+      rest: { condition: service_started }
+    environment:
+      <<: *keys
+      SERVICE_KEY: ${SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UtbG9jYWwiLCJpYXQiOjE3OTUzOTIwMDAsImV4cCI6NDEwMjQ0NDgwMH0.7fpydY-2sNx3kgGiDwtZ-xhWuryC0cI4kF7Qw07uNKw}
+      POSTGREST_URL: http://rest:3000
+      AUTH_JWT_SECRET: ${JWT_SECRET:-haksikshot-local-only-jwt-secret-not-for-production-0001}
+      PGRST_JWT_SECRET: ${JWT_SECRET:-haksikshot-local-only-jwt-secret-not-for-production-0001}
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD:-haksikshot-local-postgres-password}@db:5432/postgres
+      STORAGE_PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8080}
+      REQUEST_ALLOW_X_FORWARDED_PATH: "true"
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      GLOBAL_S3_BUCKET: stub
+      TENANT_ID: stub
+      REGION: stub
+      ENABLE_IMAGE_TRANSFORMATION: "false"
+    volumes:
+      - storage-data:/var/lib/storage
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/status"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+  functions:
+    image: supabase/edge-runtime:v1.79.2
+    depends_on:
+      rest: { condition: service_healthy }
+    command: ["start", "--main-service", "/home/deno/functions/main"]
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-haksikshot-local-only-jwt-secret-not-for-production-0001}
+      SUPABASE_URL: http://web:8080          # 서버 함수 → 게이트웨이 → auth/rest/storage
+      SUPABASE_ANON_KEY: ${ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlLWxvY2FsIiwiaWF0IjoxNzk1MzkyMDAwLCJleHAiOjQxMDI0NDQ4MDB9.bvfQhf4DA0c9mdanM-_6efTRaWrGZDvzV5h-GdCi3jU}
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UtbG9jYWwiLCJpYXQiOjE3OTUzOTIwMDAsImV4cCI6NDEwMjQ0NDgwMH0.7fpydY-2sNx3kgGiDwtZ-xhWuryC0cI4kF7Qw07uNKw}
+      VERIFY_JWT: "false"                    # 운영과 같음: verify-photo가 직접 로그인 확인
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_PRIMARY_MODEL: ${GEMINI_PRIMARY_MODEL:-}
+    volumes:
+      - ./docker/functions/main:/home/deno/functions/main:ro
+      - ./docker/functions/deno.jsonc:/home/deno/functions/deno.jsonc:ro
+      - ./supabase/functions/verify-photo:/home/deno/functions/verify-photo:ro
+      - deno-cache:/root/.cache/deno
+    restart: unless-stopped
+
+  migrate:
+    image: supabase/postgres:17.6.1.136
+    depends_on:
+      db: { condition: service_healthy }
+      auth: { condition: service_healthy }      # auth.users 표가 먼저 있어야 함
+      storage: { condition: service_healthy }   # storage.buckets 표가 먼저 있어야 함
+    environment:
+      <<: *db-env
+    entrypoint: ["sh", "/migrate.sh"]
+    volumes:
+      - ./docker/migrate.sh:/migrate.sh:ro
+      - ./supabase/migrations:/migrations:ro
+      - ./supabase/seed.sql:/seed.sql:ro
+    restart: "no"
+
+volumes:
+  db-data:
+  db-config:
+  storage-data:
+  deno-cache:

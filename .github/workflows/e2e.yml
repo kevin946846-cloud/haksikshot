@@ -1,7 +1,8 @@
 name: e2e
 
-# 도커로 띄운 앱을 실제 브라우저(Playwright)로 눌러 보며 처음부터 끝까지 확인
-# 서버는 운영 Supabase를 그대로 씀 → 테스트마다 새 익명 사용자로 들어가고, 끝나면 자기 기록을 지움
+# docker compose로 학식샷 전체(화면·API·로그인·사진 저장·서버 함수·DB)를 띄우고
+# 실제 브라우저(Playwright)로 눌러 보며 처음부터 끝까지 확인
+# → 운영 Supabase는 전혀 건드리지 않음 (테스트용 DB가 매번 새로 만들어졌다 사라짐)
 on:
   pull_request:
   push:
@@ -15,7 +16,7 @@ concurrency:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: tests/e2e
@@ -27,12 +28,19 @@ jobs:
           cache: npm
           cache-dependency-path: tests/e2e/package-lock.json
 
-      - name: 앱을 도커로 실행
+      - name: 학식샷 전체를 docker compose로 실행
         working-directory: .
         run: |
-          docker build -t haksikshot:e2e .
-          docker run -d --name app -p 8080:8080 haksikshot:e2e
-          for i in $(seq 1 20); do curl -fs http://localhost:8080/healthz && break; sleep 1; done
+          docker compose up -d --build
+          # 화면 + API(메뉴 43개) + 로그인이 모두 응답할 때까지 최대 4분
+          for i in $(seq 1 120); do
+            n=$(curl -fs "http://localhost:8080/rest/v1/menus?select=id" 2>/dev/null | grep -o '"id"' | wc -l || true)
+            if [ "${n:-0}" = "43" ] && curl -fs http://localhost:8080/auth/v1/health > /dev/null; then echo "준비 완료 (${i}회)"; break; fi
+            sleep 2
+          done
+          docker compose ps -a
+          docker compose logs migrate
+          [ "${n:-0}" = "43" ] || { docker compose logs --tail 80; exit 1; }
 
       - name: Playwright 설치
         run: |
@@ -43,6 +51,11 @@ jobs:
         env:
           BASE_URL: http://localhost:8080
         run: npx playwright test
+
+      - name: 실패하면 서버 로그 보기
+        if: failure()
+        working-directory: .
+        run: docker compose logs --tail 120
 
       - name: 실패 리포트 올리기
         if: failure()
