@@ -70,4 +70,4 @@ function show(v){
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.view===v));
   window.scrollTo(0,0);
 }
-$("#bap-hero").innerHTML=BAP("think");save();render();
+$("#bap-logo").innerHTML=BAP("happy");save();render();
