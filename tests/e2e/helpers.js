@@ -16,7 +16,7 @@ const db = (page, fn, arg) => page.evaluate(fn, arg);
 // 이 테스트 사용자가 남긴 기록 지우기 (RLS상 자기 행만 지울 수 있음)
 async function cleanup(page) {
   await db(page, async () => {
-    for (const t of ["reviews", "votes", "meals", "wc_runs"]) await sb.from(t).delete().eq("user_id", me);
+    for (const t of ["reviews", "votes", "meals", "wc_runs", "survey_responses"]) await sb.from(t).delete().eq("user_id", me);
     try { st.meals = []; st.mine = {}; st.plans = {}; save(); } catch (_) {}
   });
 }

@@ -5,7 +5,7 @@ FROM nginx:1.27-alpine
 
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/40-config-js.sh /docker-entrypoint.d/40-config-js.sh
-COPY index.html sync.js config.js /usr/share/nginx/html/
+COPY index.html survey.html results.html sync.js config.js /usr/share/nginx/html/
 COPY css /usr/share/nginx/html/css
 COPY js /usr/share/nginx/html/js
 COPY vendor /usr/share/nginx/html/vendor
