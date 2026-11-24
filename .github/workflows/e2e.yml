@@ -56,7 +56,7 @@ jobs:
         if: failure()
         working-directory: .
         run: |
-          echo "=== db 처음 로그 ==="; docker compose logs --no-color db | head -120
+          echo "=== db 오류 ==="; docker compose logs --no-color db | grep -v "must be owner of function uid" | grep -n -B2 -A6 -E "ERROR|FATAL|psql:|exited|running /docker" | grep -v "STATEMENT" | head -150
           echo "=== 나머지 ==="; docker compose logs --no-color --tail 60 auth storage rest functions migrate web
 
       - name: 실패 리포트 올리기
