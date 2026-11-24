@@ -23,7 +23,7 @@ document.addEventListener("click",e=>{
     if(todayMeals().length>=3||slotUsed(sl.dataset.slot)){toast("이미 체크한 끼니예요");return}
     st.meals.push({id:openId,slot:sl.dataset.slot,at:Date.now()});API.eat(openId,sl.dataset.slot);delete st.plans[openId];slotOpen=false;
     if(st.mine[openId])st.mine[openId].verified=true;
-    toast(`${sl.dataset.slot} 먹음 체크 완료. 사진도 올릴 수 있어요`);save();render();return}
+    toast(`${sl.dataset.slot} 먹음 체크 완료. 사진도 올릴 수 있어요`,"yum");save();render();return}
   const b=e.target.closest("button[data-a]");if(!b||!openId)return;const id=openId,a=b.dataset.a;
   if(a==="eat"){slotOpen=true;renderDetail();return}
   if(a==="slotcancel"){slotOpen=false;renderDetail();return}
@@ -31,7 +31,7 @@ document.addEventListener("click",e=>{
   if(a==="unpick"){delete st.plans[id];toast("예정을 취소했어요")}
   if(a==="uneat"){const x=eatenToday(id);st.meals=st.meals.filter(y=>y!==x);API.uneat(id);if(st.mine[id])st.mine[id].verified=false;toast("먹음 체크를 취소했어요")}
   if(a==="restock"){delete st.sold[id];API.restock(id);toast("다시 있음으로 바꿨어요")}
-  if(a==="submit"){if(!draft.s){toast("별점을 골라 주세요");return}st.mine[id]={s:draft.s,t:draft.t.trim(),f:{...draft.f},at:Date.now(),verified:!!eatenToday(id)};API.review(id,st.mine[id]);toast("평가를 등록했어요")}
+  if(a==="submit"){if(!draft.s){toast("별점을 골라 주세요");return}st.mine[id]={s:draft.s,t:draft.t.trim(),f:{...draft.f},at:Date.now(),verified:!!eatenToday(id)};API.review(id,st.mine[id]);toast("평가를 등록했어요","yum")}
   save();render();
 });
 document.addEventListener("change",async e=>{
@@ -70,4 +70,4 @@ function show(v){
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.view===v));
   window.scrollTo(0,0);
 }
-save();render();
+$("#bap-hero").innerHTML=BAP("think");save();render();
