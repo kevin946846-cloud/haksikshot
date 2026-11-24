@@ -1,0 +1,22 @@
+# 비밀값·개인정보 자동 검사 설정 (gitleaks). CI의 secrets 워크플로가 PR마다 전체 이력을 검사한다.
+# 기본 규칙(API 키, 토큰, 비밀번호, 개인 키 등)은 그대로 쓰고, 아래 예외만 둔다.
+[extend]
+useDefault = true
+
+# 개인 이메일이 코드·문서에 들어가면 실패 (GitHub noreply, 예시 주소는 허용)
+[[rules]]
+id = "personal-email"
+description = "개인 이메일 주소"
+regex = '''[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.(com|net|org|kr|ac\.kr|io|me|edu)'''
+[[rules.allowlists]]
+regexTarget = "match"
+regexes = ['''noreply''', '''@example\.''', '''@anthropic\.com''', '''@supabase\.''', '''@playwright\.''']
+
+[[allowlists]]
+description = "공개해도 되는 값과 오탐"
+# 1) 브라우저 앱이 쓰는 Supabase 공개 키 (anon JWT, publishable). RLS가 권한을 막으므로 공개용으로 설계된 키
+# 2) 저장소에 포함한 supabase-js 압축본 안의 문자열 (라이브러리 코드, 비밀값 아님)
+regexTarget = "match"
+regexes = ['''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkYnZlYnp1em9taHdxanFuZmphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxNjIwOTEsImV4cCI6MjEwODczODA5MX0.97ZFVu2YNP_8DDpATnSIliEfHme03_NmBtatlWaKwCA''', '''sb_publishable_BlMuiXeh-eP0sudEBtHRLw_Dh8GQZl8''']
+paths = ['''^vendor/''']
+condition = "OR"
