@@ -30,6 +30,7 @@ js/worldcup.js / js/events.js        메뉴 월드컵 / 버튼·탭 이벤트
 sync.js / config.js                  서버 연동 / Supabase 주소·공개 키
 supabase/migrations/                 DB 구조 전체 (테이블, 보안 규칙, 함수, 사진 저장소)
 supabase/functions/verify-photo      사진·품절 제보 AI 확인 (서버에서 실행)
+docker-compose.yml, docker/          전체 스택 로컬 실행 (화면·게이트웨이·API·로그인·저장소·서버 함수·DB)
 ```
 
 ## 설정 순서
@@ -45,7 +46,7 @@ supabase/functions/verify-photo      사진·품절 제보 AI 확인 (서버에�
    supabase secrets set GEMINI_API_KEY=<키>
    supabase functions deploy verify-photo --no-verify-jwt
    ```
-   모델이 바뀌면 `supabase secrets set GEMINI_MODEL=<모델명>` (기본 `gemini-2.5-flash`).
+   모델 순서는 `GEMINI_PRIMARY_MODEL`(기본 `gemini-3.6-flash`) → `GEMINI_MODEL` secret으로 바꿀 수 있습니다.
 5. **GitHub에 올리기**
    ```bash
    git init && git add . && git commit -m "학식샷 첫 배포"
@@ -55,20 +56,44 @@ supabase/functions/verify-photo      사진·품절 제보 AI 확인 (서버에�
    ```
 6. **Vercel 배포**: vercel.com > Add New Project > 위 저장소 Import > Framework `Other` > Deploy. 이후 `git push`마다 자동 배포됩니다.
 
-## 도커로 실행하기 (다른 컴퓨터에서 바로 띄우기)
+## 도커로 실행하기 (프론트·백엔드·DB 전부, 다른 컴퓨터에서 바로)
 
-Docker만 설치돼 있으면 Node나 다른 도구 없이 같은 화면이 뜹니다. 데이터는 Supabase 클라우드를 그대로 쓰므로 인터넷 연결이 필요합니다.
+Docker만 설치돼 있으면 명령 하나로 학식샷 전체가 내 컴퓨터에서 뜹니다. Supabase 클라우드 계정·키가 없어도 됩니다.
 
 ```bash
 git clone https://github.com/kevin946846-cloud/haksikshot.git
 cd haksikshot
-docker compose up -d --build
+docker compose up -d --build      # 처음엔 이미지를 받느라 몇 분 걸림
 # 브라우저에서 http://localhost:8080
 ```
 
-- 끄기: `docker compose down`
-- 다른 Supabase 프로젝트로 띄우기: `docker-compose.yml`의 `SUPABASE_URL`, `SUPABASE_ANON_KEY` 주석을 풀고 값 입력 (공개 anon 키만)
-- GitHub Actions(`.github/workflows/docker.yml`)가 push마다 깨끗한 환경에서 이미지 빌드 → 실행 → 응답 확인을 자동으로 합니다
+```
+브라우저 ──> web (nginx: 화면 + API 게이트웨이, :8080)
+               ├─ /rest/v1      ──> rest      PostgREST: DB를 API로
+               ├─ /auth/v1      ──> auth      GoTrue: 익명 로그인
+               ├─ /storage/v1   ──> storage   사진 저장
+               └─ /functions/v1 ──> functions edge-runtime: 사진 AI 확인(verify-photo) ──> Gemini
+                                     │
+                                    db (Postgres) <── migrate: 처음 뜰 때 supabase/migrations + seed.sql 적용
+```
+
+| 서비스 | 이미지 | 하는 일 |
+|---|---|---|
+| web | 이 저장소의 Dockerfile (nginx) | 화면, `/auth·rest·storage·functions/v1` 을 각 서비스로 넘기는 게이트웨이 |
+| db | `supabase/postgres` | 데이터베이스 |
+| rest | `postgrest/postgrest` | 앱의 `sb.from(...)`, `sb.rpc(...)` 요청을 SQL로 |
+| auth | `supabase/gotrue` | 익명 로그인 |
+| storage | `supabase/storage-api` | 메뉴 사진·품절 증거 파일 |
+| functions | `supabase/edge-runtime` | `supabase/functions/verify-photo` 실행 |
+| migrate | `supabase/postgres` | 마이그레이션·기본 메뉴 적용 후 종료 (다시 띄워도 이미 적용한 파일은 건너뜀) |
+
+- 운영(haksikshot.vercel.app)과 **같은 코드·같은 DB 구조**입니다. 운영은 이 백엔드 부분을 Supabase 클라우드가 돌리고, 로컬은 같은 오픈소스 구성 요소를 Compose로 돌립니다. 데이터는 따로라 로컬에서 무엇을 해도 운영에 영향이 없습니다.
+- 구성은 [Supabase 공식 self-hosting](https://github.com/supabase/supabase/tree/master/docker)에서 학식샷이 쓰는 것만 골랐습니다. 관리 화면·실시간·로그 분석은 빼서 가볍고, 실시간 갱신 대신 30초마다 다시 받기로 동작합니다.
+- **사진 AI 확인**: `.env.example`을 `.env`로 복사하고 `GEMINI_API_KEY`를 넣은 뒤 `docker compose up -d`. 키가 없으면 사진은 '미확인'으로 올라가고 품절 제보는 막힙니다.
+- 끄기: `docker compose down` / 데이터까지 지우고 처음부터: `docker compose down -v`
+- 8080 포트가 이미 쓰이면 `.env`에 `WEB_PORT=8090`, `PUBLIC_URL=http://localhost:8090`
+- 화면만 따로 띄우기(운영 Supabase에 연결): `docker build -t haksikshot . && docker run -p 8080:8080 haksikshot`
+- GitHub Actions가 PR마다 Compose로 전체를 띄우고 E2E 테스트를 돌립니다 (`.github/workflows/e2e.yml`)
 
 ## 성능: 캐시와 인덱스
 
@@ -108,6 +133,9 @@ docker compose up -d --build
 
 ## DB 구조 관리 (마이그레이션)
 
+테이블 관계: `menus`(메뉴판)를 `meals`(먹음 체크)·`reviews`(후기)·`votes`(가성비 투표)·`photos`(사진)·`sold`(품절)가 `menu_id` 외래 키로 참조하고,
+사용자 기록(`meals`·`reviews`·`votes`·`wc_runs`·`recovery`)은 `auth.users`를 참조합니다. 없는 메뉴·없는 사용자 기록은 DB가 거절합니다.
+
 DB 구조는 `supabase/migrations/` 폴더 하나에서 관리합니다. 파일 이름 앞의 숫자 순서대로 적용합니다.
 
 - `20261124013700_baseline.sql`: 2026-11-24 운영 DB를 그대로 뽑은 기준점. 빈 Postgres에 적용해 운영과 같은지 비교해 확인함
@@ -130,7 +158,7 @@ supabase-js 라이브러리와 글꼴(Jua, Noto Sans KR)은 `vendor/`에 들어 
 
 ## 자동 E2E 테스트
 
-PR을 올릴 때마다 GitHub Actions가 앱을 도커로 띄우고, 실제 브라우저(Playwright)로 눌러 보며 32개 시나리오를 확인합니다.
+PR을 올릴 때마다 GitHub Actions가 `docker compose`로 학식샷 전체(화면·API·로그인·사진 저장·서버 함수·DB)를 띄우고, 실제 브라우저(Playwright)로 눌러 보며 32개 시나리오를 확인합니다. 테스트용 DB는 매번 새로 만들어졌다 사라지므로 **운영 DB를 전혀 건드리지 않습니다.**
 
 | 묶음 | 내용 |
 |---|---|
@@ -139,16 +167,16 @@ PR을 올릴 때마다 GitHub Actions가 앱을 도커로 띄우고, 실제 브�
 | 서버 규칙 (7) | 화면을 거치지 않고 직접 요청해도 RLS·제약 조건·AI 횟수 제한이 막는지 |
 | 서버 집계 (2) | 다른 사람 별점·후기·투표·월드컵 결과가 서버에서 합산돼 보이는지 |
 | 시간대 (2) | 휴대폰 시간대가 미국·영국이어도 끼니·19시 초기화·주차·오늘 날짜가 한국 시간 기준인지 |
-| 메뉴판 (3) | 내장 기본 목록 = 운영 DB, 앱은 메뉴판을 못 고침, DB 변경(가격·신메뉴·판매 중단)이 배포 없이 반영 |
+| 메뉴판 (3) | 내장 기본 목록 = DB 메뉴판, 앱은 메뉴판을 못 고침, DB 변경(가격·신메뉴·판매 중단)이 배포 없이 반영 |
 | 메뉴 아이콘 (2) | 카드는 SVG 아이콘(43개 모두 다름), 사진은 눌러서 상세에서, 아이콘 잘림 없음 |
 | 오프라인 대비 (1) | Supabase 말고 바깥 주소를 모두 막아도 화면·글꼴·로그인이 되는지 |
 
 내 컴퓨터에서 돌리기:
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 cd tests/e2e && npm ci && npx playwright install chromium
-npx playwright test
+npx playwright test          # 기본 대상: http://localhost:8080 (로컬 Compose)
 ```
 
 테스트마다 새 익명 사용자로 들어가고, 끝나면 자기 기록을 지웁니다.

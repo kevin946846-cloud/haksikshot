@@ -119,7 +119,8 @@ test.describe("크리티컬 케이스", () => {
 
   test("C5. 서버가 죽어도 메뉴판은 뜨고, 사용자에게 알려 준다", async ({ browser }, info) => {
     const ctx = await browser.newContext(ctxOpts(info.project.use));
-    await ctx.route(/supabase\.co\//, (r) => r.abort("connectionrefused"));
+    // 서버(Supabase API: 클라우드든 로컬 compose든 같은 경로)로 가는 요청을 전부 끊음
+    await ctx.route(/\/(auth|rest|storage|functions|realtime)\/v1\//, (r) => r.abort("connectionrefused"));
     const page = await ctx.newPage();
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
