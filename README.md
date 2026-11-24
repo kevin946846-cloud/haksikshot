@@ -19,6 +19,7 @@ supabase/functions/verify-photo      사진·품절 제보 AI 확인 (서버에�
 
 1. **Supabase 프로젝트 만들기** (리전: Seoul). `Authentication > Sign In / Providers`에서 **Allow anonymous sign-ins**를 켭니다.
 2. **DB 만들기**: `supabase/migrations/` 폴더의 파일을 이름 순서대로 `SQL Editor`에 붙여넣고 Run. (CLI가 있으면 `supabase db push`)
+   그다음 `supabase/seed.sql`(기본 메뉴 43개)을 한 번 Run.
 3. **키 넣기**: `config.js`에 Project URL과 anon key를 넣습니다. (`Project Settings > API`)
 4. **AI 사진 확인** (선택, 없으면 사진은 '미확인'으로 올라가고 품절 제보는 막힘):
    [Google AI Studio](https://aistudio.google.com)에서 무료 Gemini 키를 발급받고
@@ -79,6 +80,15 @@ docker compose up -d --build
 - AI 확인은 1인 하루(한국 시간) 사진 5번, 품절 제보 10번까지입니다. Edge Function secret `FOOD_DAILY_LIMIT`, `SOLD_DAILY_LIMIT`로 바꿀 수 있습니다.
 - 사진이나 품절 증거가 바뀌면 예전 파일은 저장소에서 지웁니다. 표에서 가리키지 않는 파일(10분 지난 것)도 업로드 때마다 함께 정리합니다.
 
+## 메뉴판 바꾸기 (코드 수정·배포 없이)
+
+메뉴판은 Supabase `menus` 표에서 관리합니다. `Table Editor > menus`에서 고치면 앱이 10분 안에 받아서 반영합니다.
+
+- 가격·이름·영양 추정치·맛 태그 변경: 해당 행을 고침
+- 새 메뉴: 행 추가. id는 `일품 i숫자`, `양식 y숫자`, `분식 b숫자` 형식 (예: `i14`)
+- 판매 중단: 행을 지우지 말고 `on_sale`을 `false`로 (예전 먹음 기록·후기가 메뉴 이름을 계속 찾을 수 있게)
+- 앱에 내장된 기본 목록(`js/data.js`)은 첫 화면과 서버 장애 때만 쓰입니다. 앱 사용자는 이 표를 고칠 수 없습니다(읽기만 가능)
+
 ## DB 구조 관리 (마이그레이션)
 
 DB 구조는 `supabase/migrations/` 폴더 하나에서 관리합니다. 파일 이름 앞의 숫자 순서대로 적용합니다.
@@ -103,7 +113,7 @@ supabase-js 라이브러리와 글꼴(Jua, Noto Sans KR)은 `vendor/`에 들어 
 
 ## 자동 E2E 테스트
 
-PR을 올릴 때마다 GitHub Actions가 앱을 도커로 띄우고, 실제 브라우저(Playwright)로 눌러 보며 27개 시나리오를 확인합니다.
+PR을 올릴 때마다 GitHub Actions가 앱을 도커로 띄우고, 실제 브라우저(Playwright)로 눌러 보며 30개 시나리오를 확인합니다.
 
 | 묶음 | 내용 |
 |---|---|
@@ -112,6 +122,7 @@ PR을 올릴 때마다 GitHub Actions가 앱을 도커로 띄우고, 실제 브�
 | 서버 규칙 (7) | 화면을 거치지 않고 직접 요청해도 RLS·제약 조건·AI 횟수 제한이 막는지 |
 | 서버 집계 (2) | 다른 사람 별점·후기·투표·월드컵 결과가 서버에서 합산돼 보이는지 |
 | 시간대 (2) | 휴대폰 시간대가 미국·영국이어도 끼니·19시 초기화·주차·오늘 날짜가 한국 시간 기준인지 |
+| 메뉴판 (3) | 내장 기본 목록 = 운영 DB, 앱은 메뉴판을 못 고침, DB 변경(가격·신메뉴·판매 중단)이 배포 없이 반영 |
 | 오프라인 대비 (1) | Supabase 말고 바깥 주소를 모두 막아도 화면·글꼴·로그인이 되는지 |
 
 내 컴퓨터에서 돌리기:
