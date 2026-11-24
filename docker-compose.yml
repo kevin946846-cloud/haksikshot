@@ -63,7 +63,11 @@ services:
     volumes:
       - ./docker/supabase/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
       - ./docker/supabase/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
-      - db-data:/var/lib/postgresql/data
+      # nocopy: 이미지 안의 기존 파일을 볼륨에 복사하지 않음 → 처음 뜰 때 DB 초기화 스크립트(역할·비밀번호)가 반드시 실행됨
+      - type: volume
+        source: db-data
+        target: /var/lib/postgresql/data
+        volume: { nocopy: true }
       - db-config:/etc/postgresql-custom
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
