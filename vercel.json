@@ -36,5 +36,15 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/survey",
+      "destination": "/survey.html"
+    },
+    {
+      "source": "/results",
+      "destination": "/results.html"
+    }
   ]
 }

@@ -1,0 +1,70 @@
+<!doctype html><html lang="ko"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>학식샷 사용 평가</title>
+<meta name="description" content="학식샷을 써 본 소감을 2분 동안 알려 주세요">
+<link rel="stylesheet" href="vendor/fonts/fonts.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/survey.css">
+</head><body>
+<main class="app sv">
+  <header>
+    <h1>학식<span>샷</span> <small>사용 평가</small></h1>
+    <a class="hint" href="./">학식샷 열기 →</a>
+  </header>
+  <section class="sv-intro">
+    <h2>써 보니 어땠나요?</h2>
+    <p>2분이면 끝나요. 이름·학번·연락처는 묻지 않고, 결과는 <a href="results">집계 화면</a>에 숫자로만 공개돼요.
+      다시 제출하면 이전 답이 고쳐져요.</p>
+    <div class="sv-prog" aria-hidden="true"><span id="prog"></span></div>
+  </section>
+
+  <form id="sv" novalidate>
+    <fieldset class="sv-card">
+      <legend>1. 기본 정보</legend>
+      <div class="q" data-name="days" data-type="one"><p>학식샷을 써 본 기간</p></div>
+      <div class="q" data-name="freq" data-type="one"><p>다래락(학식)에 가는 횟수</p></div>
+      <div class="q" data-name="device" data-type="one"><p>주로 쓴 기기</p></div>
+    </fieldset>
+
+    <fieldset class="sv-card">
+      <legend>2. 써 본 기능 <small>여러 개 고르기</small></legend>
+      <div class="q" data-name="used" data-type="many"></div>
+    </fieldset>
+
+    <fieldset class="sv-card">
+      <legend>3. 사용성 <small>필수 · 1 전혀 아니다 ~ 5 매우 그렇다</small></legend>
+      <div id="sus"></div>
+    </fieldset>
+
+    <fieldset class="sv-card">
+      <legend>4. 학식샷 기능 평가 <small>해당 없으면 비워 두기</small></legend>
+      <div id="app"></div>
+    </fieldset>
+
+    <fieldset class="sv-card">
+      <legend>5. 추천 의향 <small>필수</small></legend>
+      <div class="nps" id="nps"></div>
+    </fieldset>
+
+    <fieldset class="sv-card">
+      <legend>6. 자유롭게 <small>선택</small></legend>
+      <label class="open">가장 좋았던 점<textarea name="good" maxlength="500" rows="2"></textarea></label>
+      <label class="open">불편했던 점이나 오류<textarea name="bad" maxlength="500" rows="2" placeholder="어느 화면에서 무엇을 했을 때인지 적어 주면 고치기 쉬워요"></textarea></label>
+      <label class="open">있었으면 하는 기능<textarea name="wish" maxlength="500" rows="2"></textarea></label>
+    </fieldset>
+
+    <p class="sv-err" id="err" role="alert" hidden></p>
+    <button class="btn primary sv-submit" type="submit" id="submit">제출하기</button>
+  </form>
+
+  <section class="sv-done" id="done" hidden>
+    <h2>고마워요!</h2>
+    <p id="done-msg">응답이 저장됐어요.</p>
+    <div class="sv-links"><a class="btn primary" href="results">결과 보기</a><a class="btn" href="./">학식샷으로</a><button class="btn" type="button" id="edit">답 고치기</button></div>
+  </section>
+</main>
+<div class="toast" id="toast" hidden></div>
+<script src="vendor/supabase-js-2.45.4.min.js"></script>
+<script src="config.js"></script>
+<script src="js/survey-questions.js"></script>
+<script src="js/survey.js"></script>
+</body></html>
