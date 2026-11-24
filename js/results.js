@@ -19,6 +19,7 @@ async function load() {
   $("#k-nps").textContent = s.nps.score ?? "–";
   if (s.n) $("#k-nps-l").textContent = `추천 지수 NPS · 추천 ${s.nps.promoters} / 중립 ${s.nps.passives} / 비추천 ${s.nps.detractors}`;
   $("#period").textContent = s.n ? `${dayStr(s.first_at)} ~ ${dayStr(s.last_at)} · ${s.n}명 응답` : "아직 응답이 없어요. 설문 링크를 공유해 주세요.";
+  if (!s.n) $("#period").insertAdjacentHTML("afterbegin", BAP("sad", "bap bap-e"));
 
   const buckets = [["0~50 개선 필요", 0, 51], ["51~67 보통 이하", 51, 68], ["68~71 평균 이상", 68, 72], ["72~84 좋음", 72, 85], ["85~100 매우 좋음", 85, 101]];
   const dist = buckets.map(([k, a, b]) => [k, s.sus_list.filter((x) => x >= a && x < b).length]);

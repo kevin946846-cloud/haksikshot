@@ -68,7 +68,7 @@ form.addEventListener("submit", async (e) => {
   const { error } = await sb.from("survey_responses").upsert({ user_id: me, answers: a }, { onConflict: "user_id" });
   $("#submit").disabled = false;
   if (error) { console.error(error); toast("저장하지 못했어요. 다시 시도해 주세요"); return; }
-  form.hidden = true; $(".sv-intro").hidden = true; $("#done").hidden = false;
+  form.hidden = true; $(".sv-intro").hidden = true; $("#done").hidden = false; $("#bap-done").innerHTML = BAP("yum");
   $("#done-msg").textContent = `응답이 저장됐어요. 내 사용성 점수(SUS)는 ${susScore(a.sus)}점이에요.`;
   window.scrollTo(0, 0);
 });

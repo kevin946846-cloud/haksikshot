@@ -45,4 +45,4 @@ const QUICK=[
 const fText=f=>f?QUICK.map(q=>f[q.k]?(q.k==="again"?f[q.k]:`${q.label} ${f[q.k]}`):"").filter(Boolean).join(" · "):"";
 let sortBy="low",cat="일품",goal="bulk",rankScope="wk",openId=null,busy={},slotOpen=false,draft={s:0,t:"",f:{}},lastMsg=null;
 const d0=kst();$("#today").innerHTML=`${d0.mo}월 ${d0.d}일 (${"일월화수목금토"[d0.w]})<br>다래락 · 나비센터 1층`;
-function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2400)}
+function toast(m,mood){const t=$("#toast");t.textContent=m;if(mood)t.insertAdjacentHTML("afterbegin",BAP(mood,"bap bap-t"));t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2400)}

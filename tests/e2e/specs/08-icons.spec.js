@@ -60,3 +60,19 @@ test("메뉴 아이콘 43개가 모두 48×48 틀 안에 그려진다 (잘림 �
   });
   expect(over, "틀 밖으로 나간 아이콘").toEqual([]);
 });
+
+test("캐릭터 밥톨이: 첫 화면(고민), 빈 화면(아쉬움), 먹음 체크 알림(맛있음)", async ({ page }) => {
+  await openApp(page);
+  try {
+    await expect(page.locator("#bap-hero svg.bap")).toBeVisible();
+    await page.locator(".tab", { hasText: /^랭킹$/ }).click();
+    const empty = page.locator(".empty:visible").first();
+    await expect(empty.locator("svg.bap-e")).toBeVisible();
+    await page.locator(".tab", { hasText: /^메뉴$/ }).click();
+    await openMenu(page, "i4");
+    await page.locator('#detail [data-a="eat"]').click();
+    await page.locator('#detail [data-slot="점심"]').click();
+    await expect(page.locator("#toast")).toContainText("먹음 체크 완료");
+    await expect(page.locator("#toast svg.bap-t")).toBeVisible();
+  } finally { await cleanup(page); }
+});
