@@ -3,10 +3,10 @@ name: db
 # supabase/migrations 파일이 빈 Postgres에 순서대로 적용되고, 핵심 보안 규칙이 살아 있는지 확인
 on:
   pull_request:
-    paths: ["supabase/migrations/**", "tests/db/**", ".github/workflows/db.yml"]
+    paths: ["supabase/migrations/**", "supabase/seed.sql", "tests/db/**", ".github/workflows/db.yml"]
   push:
     branches: [main]
-    paths: ["supabase/migrations/**", "tests/db/**"]
+    paths: ["supabase/migrations/**", "supabase/seed.sql", "tests/db/**"]
   workflow_dispatch:
 
 jobs:

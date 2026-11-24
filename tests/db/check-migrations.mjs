@@ -23,6 +23,10 @@ for (const f of files) {
   catch (e) { console.error("✘ 실패", f, "\n ", e.message); process.exit(1); }
 }
 
+// 기본 메뉴판 데이터
+try { await db.exec(fs.readFileSync(path.resolve(dir, "../seed.sql"), "utf8")); console.log("✓ 적용 seed.sql"); }
+catch (e) { console.error("✘ 실패 seed.sql\n ", e.message); process.exit(1); }
+
 const one = async (sql) => Object.values((await db.query(sql)).rows[0] ?? {})[0];
 const fails = [];
 const check = async (name, sql, want) => {
@@ -32,6 +36,7 @@ const check = async (name, sql, want) => {
   if (!ok) fails.push(name);
 };
 await check("모든 public 테이블에 RLS", `select count(*)::int from pg_class where relnamespace='public'::regnamespace and relkind='r' and not relrowsecurity`, 0);
+await check("메뉴 43개", `select count(*)::int from public.menus where on_sale`, 43);
 await check("앱 테이블 10개", `select count(*)::int from pg_class where relnamespace='public'::regnamespace and relkind='r'`, 10);
 await check("AI 횟수 함수는 서버만 실행", `select has_function_privilege('authenticated','public.ai_quota_take(uuid,text,integer)','execute')`, false);
 await check("저장소에 앱 직접 업로드 정책 없음", `select count(*)::int from pg_policies where schemaname='storage'`, 0);
