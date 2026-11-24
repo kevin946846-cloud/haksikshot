@@ -1,12 +1,18 @@
-// 메뉴 아이콘 (SVG, 48×48, 선 굵기 2.2, 색은 currentColor → 글자색을 따라감)
+// 메뉴 아이콘 12종 (SVG, 48×48, 선 굵기 2.2, 색은 currentColor → 글자색을 따라감)
 // 카드에는 아이콘을 보여 주고, 사진은 카드를 눌러 상세에서 봄
 const FOOD_SVG = (() => {
   const S = 'fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"';
   const T = 'fill="currentColor" opacity=".16" stroke="none"';   // 옅은 면 채우기
+  // 뚝배기: 넓은 입구, 아래로 둥근 몸통, 양옆 작은 귀, 받침 접시
+  const POT = `<path ${T} d="M9 22h30c0 10-6 16-15 16S9 32 9 22z"/><path d="M7 22h34M9 22c0 10 6 16 15 16s15-6 15-16"/><path d="M9.5 26H6.5M38.5 26h3"/><path d="M8 42h32"/>`;
   const steam = (x) => `<path d="M${x} 9c-2 2.4 2 3.6 0 6M${x + 7} 7c-2 2.4 2 3.6 0 6M${x + 14} 9c-2 2.4 2 3.6 0 6"/>`;
   return {
     // 찌개·뚝배기: 손잡이 달린 냄비 + 김
-    stew: `<g ${S}><path ${T} d="M10 22h28v10a9 9 0 0 1-9 9H19a9 9 0 0 1-9-9z"/><path d="M10 22h28v10a9 9 0 0 1-9 9H19a9 9 0 0 1-9-9z"/><path d="M8 22h32"/><path d="M10 27H6v-3M38 27h4v-3"/><path d="M15 31h18"/>${steam(17)}</g>`,
+    // 뚝배기 공통 모양: 둥근 몸통 + 넓은 입구 + 받침 접시
+    // 찌개·뚝배기: 뚝배기 + 국물 + 김
+    stew: `<g ${S}>${POT}<path d="M12 23c4 2 20 2 24 0"/>${steam(17)}</g>`,
+    // 알밥·돌솥비빔밥: 뚝배기 위로 봉긋한 밥 + 날치알
+    albap: `<g ${S}>${POT}<path ${T} d="M11 22c1-6 6-9 13-9s12 3 13 9z"/><path d="M11 22c1-6 6-9 13-9s12 3 13 9"/><path d="M17 18h.01M21 15.5h.01M25 17h.01M29 15.5h.01M31 19h.01M22 19.5h.01" stroke-width="3"/></g>`,
     // 국밥·떡국·만두국: 넓은 그릇 + 숟가락
     soup: `<g ${S}><path ${T} d="M7 25h34a17 13 0 0 1-34 0z"/><path d="M7 25h34a17 13 0 0 1-34 0z"/><path d="M18 40h12"/><path d="M31 25l9-15"/><ellipse cx="41.2" cy="8.4" rx="2.2" ry="3.2" transform="rotate(32 41.2 8.4)"/>${steam(14).replace(/M(\d+) (\d+)/g, (m, a, b) => `M${a} ${+b + 1}`)}</g>`,
     // 덮밥·비빔밥·알밥·볶음밥: 밥 봉긋한 그릇 + 젓가락
@@ -37,7 +43,7 @@ function iconKey(m) {
   if (/떡볶이|라볶이/.test(n)) return "tteok";
   if (/^공기밥$/.test(n)) return "plainrice";
   if (/라면|국수|우동|칼국수|냉면|쫄면|짜계치|면/.test(n)) return "noodle";
-  if (/비빔밥/.test(n)) return "rice";
+  if (/알밥|돌솥/.test(n)) return "albap";   // 다래락은 알밥·돌솥비빔밥이 뚝배기에 나옴
   if (/찌개|뚝배기|순두부/.test(n)) return "stew";
   if (/국밥|떡국|만두국|국$/.test(n)) return "soup";
   if (/오므라이스/.test(n)) return "omurice";

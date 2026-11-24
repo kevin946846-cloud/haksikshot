@@ -8,7 +8,7 @@ index.html                           화면 뼈대 (HTML만)
 css/app.css                          스타일
 js/data.js                           메뉴 기본 목록·맛 태그·시중 가격
 js/core.js                           상태 저장, 한국 시간 날짜, 공통 도우미
-js/icons.js                          메뉴 아이콘 SVG 11종 (이름으로 자동 선택)
+js/icons.js                          메뉴 아이콘 SVG 12종 (이름으로 자동 선택)
 js/views.js                          계산(추천·가성비)과 탭·상세 화면 그리기
 js/worldcup.js / js/events.js        메뉴 월드컵 / 버튼·탭 이벤트
 sync.js / config.js                  서버 연동 / Supabase 주소·공개 키
