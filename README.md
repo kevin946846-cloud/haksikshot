@@ -4,7 +4,13 @@
 화면은 정적 HTML, 데이터·사진·익명 로그인·AI 확인은 Supabase, 배포는 Vercel.
 
 ```
-index.html / sync.js / config.js     화면 + 서버 연동
+index.html                           화면 뼈대 (HTML만)
+css/app.css                          스타일
+js/data.js                           메뉴 기본 목록·맛 태그·시중 가격
+js/core.js                           상태 저장, 한국 시간 날짜, 공통 도우미
+js/views.js                          계산(추천·가성비)과 탭·상세 화면 그리기
+js/worldcup.js / js/events.js        메뉴 월드컵 / 버튼·탭 이벤트
+sync.js / config.js                  서버 연동 / Supabase 주소·공개 키
 supabase/migrations/                 DB 구조 전체 (테이블, 보안 규칙, 함수, 사진 저장소)
 supabase/functions/verify-photo      사진·품절 제보 AI 확인 (서버에서 실행)
 ```
@@ -51,7 +57,7 @@ docker compose up -d --build
 | 무엇 | 어디에 | 효과 |
 | --- | --- | --- |
 | 마지막으로 받은 데이터 캐시 | 브라우저 localStorage (`haksikshot-snap-v2`) | 앱을 다시 열면 네트워크를 기다리지 않고 바로 그림, 그 뒤 새 데이터로 교체 |
-| 스크립트 캐시 | `vercel.json`, `docker/nginx.conf` | `sync.js`·`config.js`는 10분 캐시, `index.html`은 항상 새 버전 확인 |
+| 스크립트 캐시 | `vercel.json`, `docker/nginx.conf` | `css/`·`js/`·`sync.js`·`config.js`는 10분 캐시, `index.html`은 항상 새 버전 확인 |
 | 백그라운드 탭 | `sync.js` | 탭이 안 보일 때는 30초마다 다시 받지 않음 |
 | DB 인덱스 | `supabase/migrations/…_baseline.sql` | 주간 집계(meals.created_at), 투표(votes.week), 품절·사진(created_at) |
 
