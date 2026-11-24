@@ -1,5 +1,7 @@
 # 학식샷
 
+[![e2e](https://github.com/kevin946846-cloud/haksikshot/actions/workflows/e2e.yml/badge.svg)](https://github.com/kevin946846-cloud/haksikshot/actions/workflows/e2e.yml) [![docker](https://github.com/kevin946846-cloud/haksikshot/actions/workflows/docker.yml/badge.svg)](https://github.com/kevin946846-cloud/haksikshot/actions/workflows/docker.yml) [![db](https://github.com/kevin946846-cloud/haksikshot/actions/workflows/db.yml/badge.svg)](https://github.com/kevin946846-cloud/haksikshot/actions/workflows/db.yml) [![secrets](https://github.com/kevin946846-cloud/haksikshot/actions/workflows/secrets.yml/badge.svg)](https://github.com/kevin946846-cloud/haksikshot/actions/workflows/secrets.yml)
+
 다래락 학식 메뉴의 실제 사진·평가·품절 정보를 모두가 함께 채우는 웹 서비스.
 화면은 정적 HTML, 데이터·사진·익명 로그인·AI 확인은 Supabase, 배포는 Vercel.
 
@@ -193,3 +195,51 @@ npx playwright test          # 기본 대상: http://localhost:8080 (로컬 Comp
 ```
 
 테스트마다 새 익명 사용자로 들어가고, 끝나면 자기 기록을 지웁니다.
+
+## 개발 과정과 품질 관리
+
+### 작업 흐름
+
+```
+기능 브랜치(feat/·fix/·docs/) → PR → CI 4종 통과 → squash 머지 → Vercel 자동 배포
+```
+
+- `main`에는 직접 푸시하지 않습니다. 보호 규칙으로 PR과 CI 통과(e2e·docker·secrets)가 있어야만 머지되고, 강제 푸시·삭제도 막혀 있습니다.
+- 커밋 메시지는 `feat:` `fix:` `refactor:` `test:` `docs:` `chore:` 머리말과 함께 **왜 바꿨는지**를 한국어로 적습니다.
+- PR 하나에 한 가지 목적만 담고, 본문에 변경 내용과 이유를 남깁니다. ([PR 목록](https://github.com/kevin946846-cloud/haksikshot/pulls?q=is%3Apr))
+
+### CI (GitHub Actions)
+
+| 워크플로 | 언제 | 하는 일 |
+|---|---|---|
+| `e2e` | 모든 PR, main 푸시 | `docker compose`로 전체 스택을 띄우고 Playwright로 34개 시나리오 확인 (운영 DB 미사용) |
+| `docker` | 모든 PR, main 푸시 | 이미지 빌드 → 기본 설정으로 실행 → 화면·스크립트 응답 확인 |
+| `db` | 마이그레이션·시드가 바뀐 PR | 빈 Postgres(PGlite)에 마이그레이션을 처음부터 적용해 깨지지 않는지, 두 번 적용해도 안전한지 확인 |
+| `secrets` | 모든 PR, main 푸시 | gitleaks로 전체 커밋 이력의 API 키·토큰·비밀번호·개인 이메일 검사, PR 커밋 작성자 이메일이 noreply인지 확인 |
+
+### CI가 머지 전에 잡아낸 문제 (실제 사례)
+
+| PR | CI 실패 원인 | 고친 방법 |
+|---|---|---|
+| #19 메뉴 아이콘 43개 | 테스트 코드에 같은 이름 변수(`keys`)를 두 번 선언 | 변수 이름 분리 |
+| #22 도커 전체 스택 | DB 볼륨이 이미지 데이터를 복사해 초기화 스크립트가 건너뛰어짐 | 볼륨에 `nocopy` 설정 |
+| #22 도커 전체 스택 | 없는 역할(`supabase_functions_admin`)에 권한을 주는 SQL | 해당 줄 삭제 |
+| #22 도커 전체 스택 | PostgREST 준비 확인(`--ready`)이 관리 서버 주소 없이 실패 | `PGRST_ADMIN_SERVER_HOST` 지정 |
+| #23 사용 평가 설문 | 결과 화면 테스트가 로그인 전에 실행돼 사용자 정보가 비어 있음 | 테스트 단계 순서 조정 |
+
+실패한 실행 기록은 [Actions](https://github.com/kevin946846-cloud/haksikshot/actions)에서 그대로 볼 수 있습니다.
+
+### Docker 관리
+
+- `docker compose up -d --build` 한 줄로 화면(nginx)·API 게이트웨이·PostgREST·Auth·Storage·Edge Function·Postgres·마이그레이션이 모두 뜹니다.
+- 이미지 버전은 모두 고정(`supabase/postgres:17.6.1.136`, PostgREST `v14.18` 등)해 언제 띄워도 같은 환경이 됩니다.
+- DB는 저장소의 `supabase/migrations/` + `seed.sql`로 매번 같은 상태로 만들어지고, 운영 DB와는 완전히 분리됩니다.
+- 비밀값은 `.env`(커밋 안 됨)로 넣고, `.env.example`에 필요한 항목만 빈 값으로 둡니다.
+
+### 비밀값·개인정보 원칙
+
+- 서비스 롤 키, Gemini API 키 등 서버 비밀값은 저장소에 없습니다. 운영 값은 Supabase 대시보드(Edge Function secrets)에만 있습니다.
+- `config.js`의 키는 브라우저용 **공개 키(anon/publishable)**이며, 실제 권한은 DB의 RLS 정책이 막습니다. (서버 규칙 E2E 7개가 직접 요청으로 검증)
+- `docker-compose.yml`의 JWT 비밀값·키 기본값은 **로컬 실행 전용**으로 만든 값이라 운영 Supabase에서는 쓸 수 없습니다. (발급자 `supabase-local`)
+- 커밋 작성자 이메일은 GitHub noreply 주소만 씁니다. 사용자 데이터는 익명 로그인으로만 모아 이름·학번·연락처를 받지 않습니다.
+
