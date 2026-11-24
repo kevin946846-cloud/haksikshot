@@ -5,6 +5,8 @@
 
 **바로 써 보기: https://haksikshot.vercel.app**
 
+**개발 블로그 (노션)**: [학식샷 개발 블로그](https://app.notion.com/p/4088857400b38157bf68e19c3e2fcd7a) · 1편 주제 제안 · 2편 GitHub·서버 연결 · 3편 테스트와 강의 적용 · 4편 자동 테스트·도커 전체 실행·사용 평가
+
 <p>
   <img src="docs/screenshots/home.png" width="240" alt="첫 화면: 식권 발권기 모양 히어로">
   <img src="docs/screenshots/menu.png" width="240" alt="메뉴판: 메뉴마다 다른 SVG 아이콘">
