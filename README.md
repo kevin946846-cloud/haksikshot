@@ -35,8 +35,8 @@ docker-compose.yml, docker/          전체 스택 로컬 실행 (화면·게이
 
 ## 사용 평가 설문 (실사용자 테스트)
 
-- 설문: https://haksikshot.vercel.app/survey.html (앱 상단 안내 문구의 "2분 사용 평가 참여하기"로도 들어감)
-- 결과: https://haksikshot.vercel.app/results.html (응답이 들어오면 30초마다 자동 갱신)
+- 설문: https://haksikshot.vercel.app/survey (앱 화면과 분리된 페이지, 이 링크를 따로 공유)
+- 결과: https://haksikshot.vercel.app/results (응답이 들어오면 30초마다 자동 갱신)
 
 문항: 기본 정보(써 본 기간·학식 가는 횟수·기기) → 써 본 기능 → **사용성 척도 SUS 10문항**(필수) → 학식샷 기능 평가 5문항 → **추천 의향 NPS 0~10**(필수) → 주관식 3개.
 앱과 같은 익명 로그인이라 1인 1응답(다시 내면 수정)이고, 이름·학번·연락처는 묻지 않습니다.

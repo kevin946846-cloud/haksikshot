@@ -7,9 +7,8 @@ const pick = (page, name, value) => page.locator(`[name="${name}"][value="${valu
 test("설문 제출 → 결과 집계 반영, 다시 내면 1명 그대로 수정", async ({ page }) => {
   page.on("dialog", (d) => d.accept());
   await page.goto("/");
-  await expect(page.locator("#survey-link")).toHaveAttribute("href", "survey.html");   // 앱에서 설문으로 가는 길
-  await page.locator("#survey-link").click();
-  await expect(page).toHaveURL(/survey\.html$/);
+  await expect(page.locator('a[href*="survey"]')).toHaveCount(0);   // 설문은 앱과 분리: 앱 화면에는 링크 없음
+  await page.goto("/survey");                                       // 따로 공유하는 짧은 주소
   await page.waitForFunction(() => typeof me !== "undefined" && !!me, null, { timeout: 30_000 });
   const before = await db(page, async () => (await sb.rpc("survey_summary")).data.n);
 
@@ -47,6 +46,7 @@ test("설문 제출 → 결과 집계 반영, 다시 내면 1명 그대로 수�
   expect(sec).toEqual({ others: 0, forge: "42501", bad: "23514" });
   // 결과 화면: 숫자가 보이고, 주관식 HTML은 글자로만
   await page.getByRole("link", { name: "결과 보기" }).click();
+  await expect(page).toHaveURL(/\/results$/);
   await expect(page.locator("#k-n")).toHaveText(String(after.n));
   await expect(page.locator("#t-good")).toContainText("<b>굵게</b>");
   await expect(page.locator("#t-good b")).toHaveCount(0);
