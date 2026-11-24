@@ -1,0 +1,27 @@
+name: db
+
+# supabase/migrations 파일이 빈 Postgres에 순서대로 적용되고, 핵심 보안 규칙이 살아 있는지 확인
+on:
+  pull_request:
+    paths: ["supabase/migrations/**", "tests/db/**", ".github/workflows/db.yml"]
+  push:
+    branches: [main]
+    paths: ["supabase/migrations/**", "tests/db/**"]
+  workflow_dispatch:
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: tests/db
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/db/package-lock.json
+      - run: npm ci
+      - run: npm test
