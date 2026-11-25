@@ -5,3 +5,5 @@ docs
 .github
 Dockerfile
 docker-compose.yml
+.gitleaks.toml
+.env.example

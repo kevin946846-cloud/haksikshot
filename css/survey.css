@@ -45,3 +45,10 @@
 .rs-bars em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
 .rs-texts{margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:4px}
 .rs-empty{color:var(--muted);font-size:14px}
+
+/* 개인정보 안내 */
+.privacy section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.privacy h2{font-size:16px;margin:0 0 8px}
+.privacy ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.privacy p{margin:0}
+.privacy a{color:var(--accent-ink)}
