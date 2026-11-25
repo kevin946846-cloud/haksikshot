@@ -172,7 +172,7 @@ supabase-js 라이브러리와 글꼴(Jua, Noto Sans KR)은 `vendor/`에 들어 
 
 ## 자동 E2E 테스트
 
-PR을 올릴 때마다 GitHub Actions가 `docker compose`로 학식샷 전체(화면·API·로그인·사진 저장·서버 함수·DB)를 띄우고, 실제 브라우저(Playwright)로 눌러 보며 34개 시나리오를 확인합니다. 테스트용 DB는 매번 새로 만들어졌다 사라지므로 **운영 DB를 전혀 건드리지 않습니다.**
+PR을 올릴 때마다 GitHub Actions가 `docker compose`로 학식샷 전체(화면·API·로그인·사진 저장·서버 함수·DB)를 띄우고, 실제 브라우저(Playwright)로 눌러 보며 36개 시나리오를 확인합니다. 테스트용 DB는 매번 새로 만들어졌다 사라지므로 **운영 DB를 전혀 건드리지 않습니다.**
 
 | 묶음 | 내용 |
 |---|---|
@@ -212,7 +212,7 @@ npx playwright test          # 기본 대상: http://localhost:8080 (로컬 Comp
 
 | 워크플로 | 언제 | 하는 일 |
 |---|---|---|
-| `e2e` | 모든 PR, main 푸시 | `docker compose`로 전체 스택을 띄우고 Playwright로 34개 시나리오 확인 (운영 DB 미사용) |
+| `e2e` | 모든 PR, main 푸시 | `docker compose`로 전체 스택을 띄우고 Playwright로 36개 시나리오 확인 (운영 DB 미사용) |
 | `docker` | 모든 PR, main 푸시 | 이미지 빌드 → 기본 설정으로 실행 → 화면·스크립트 응답 확인 |
 | `db` | 마이그레이션·시드가 바뀐 PR | 빈 Postgres(PGlite)에 마이그레이션을 처음부터 적용해 깨지지 않는지, 두 번 적용해도 안전한지 확인 |
 | `secrets` | 모든 PR, main 푸시 | gitleaks로 전체 커밋 이력의 API 키·토큰·비밀번호·개인 이메일 검사, PR 커밋 작성자 이메일이 noreply인지 확인 |
@@ -242,4 +242,6 @@ npx playwright test          # 기본 대상: http://localhost:8080 (로컬 Comp
 - `config.js`의 키는 브라우저용 **공개 키(anon/publishable)**이며, 실제 권한은 DB의 RLS 정책이 막습니다. (서버 규칙 E2E 7개가 직접 요청으로 검증)
 - `docker-compose.yml`의 JWT 비밀값·키 기본값은 **로컬 실행 전용**으로 만든 값이라 운영 Supabase에서는 쓸 수 없습니다. (발급자 `supabase-local`)
 - 커밋 작성자 이메일은 GitHub noreply 주소만 씁니다. 사용자 데이터는 익명 로그인으로만 모아 이름·학번·연락처를 받지 않습니다.
+- 앱 안의 [개인정보 안내](https://haksikshot.vercel.app/privacy)에 모으는 정보, 보관 위치, 지우는 방법, 사진 공개 주의를 적었습니다.
+- 배포 사이트는 보안 헤더(CSP: 스크립트는 자기 사이트만·외부 연결은 Supabase만, 다른 사이트에 끼워 넣기 금지, MIME 추측 금지, 카메라·위치 권한 차단)를 `vercel.json`에서 보냅니다.
 

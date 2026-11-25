@@ -1,0 +1,51 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>학식샷 개인정보 안내</title>
+<meta name="description" content="학식샷이 모으는 정보와 지우는 방법">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="vendor/fonts/fonts.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/survey.css">
+</head><body>
+<main class="app sv privacy">
+  <header>
+    <h1>학식<span>샷</span> <small>개인정보 안내</small></h1>
+    <a class="hint" href="./">학식샷 열기 →</a>
+  </header>
+
+  <p class="proto">학식샷은 소프트웨어 공학 수업에서 만든 베타 서비스예요. 이름·학번·이메일·전화번호는 받지 않아요.</p>
+
+  <section>
+    <h2>모으는 정보</h2>
+    <ul>
+      <li><b>익명 계정</b>: 처음 열 때 자동으로 만드는 무작위 ID. 누구인지 알 수 있는 정보는 들어 있지 않아요.</li>
+      <li><b>내가 남긴 기록</b>: 먹음 체크(메뉴·날짜·끼니), 별점과 한줄평, 주간 투표, 메뉴 월드컵 결과</li>
+      <li><b>올린 사진</b>: 음식 사진과 품절 제보 사진. AI 확인을 통과하면 메뉴 사진으로 <b>누구나 볼 수 있게 공개</b>돼요. 같은 메뉴에 새 사진이 올라오면 이전 사진은 지워져요.</li>
+      <li><b>AI 확인 횟수</b>: 하루 제한을 지키려고 남기며, 3일이 지나면 자동으로 지워요.</li>
+      <li><b>복구 코드</b>: 직접 만들었을 때만 저장해요. 다른 기기에서 내 기록을 되찾는 데 써요.</li>
+      <li><b>사용 평가 설문</b>: 설문에 참여했을 때 답변만 익명으로 저장해요.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>어디에 보관하나요</h2>
+    <ul>
+      <li>기록과 사진은 Supabase(서울 리전) 데이터베이스와 저장소에 보관해요. 화면은 Vercel에서 내려받아요.</li>
+      <li>사진은 메뉴가 맞는지 확인하려고 Google Gemini API로 보내 판정만 받아요.</li>
+      <li>빠르게 열리도록 내 기록 사본을 이 기기의 브라우저 저장소에도 둬요. 브라우저 데이터를 지우면 함께 지워져요.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>지우는 방법</h2>
+    <ul>
+      <li>먹음 체크·투표는 앱에서 다시 눌러 취소하고, 별점과 한줄평은 다시 써서 고칠 수 있어요.</li>
+      <li>내가 올린 사진이나 전체 기록 삭제, 부적절한 사진 신고는 <a href="https://github.com/kevin946846-cloud/haksikshot/issues">GitHub Issues</a>로 알려 주세요.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>사진 올릴 때 주의</h2>
+    <p>사진은 공개돼요. 얼굴, 학생증, 영수증 속 이름처럼 나를 알아볼 수 있는 것이 찍히지 않게 음식이나 키오스크 화면만 담아 주세요.</p>
+  </section>
+</main>
+</body></html>
