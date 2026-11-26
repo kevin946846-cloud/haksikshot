@@ -189,7 +189,7 @@ supabase-js 라이브러리와 글꼴(Jua, Noto Sans KR)은 `vendor/`에 들어 
 
 ## 자동 E2E 테스트
 
-PR을 올릴 때마다 GitHub Actions가 `docker compose`로 학식샷 전체(화면·API·로그인·사진 저장·서버 함수·DB)를 띄우고, 실제 브라우저(Playwright)로 눌러 보며 36개 시나리오를 확인합니다. 테스트용 DB는 매번 새로 만들어졌다 사라지므로 **운영 DB를 전혀 건드리지 않습니다.**
+PR을 올릴 때마다 GitHub Actions가 `docker compose`로 학식샷 전체(화면·API·로그인·사진 저장·서버 함수·DB)를 띄우고, 실제 브라우저(Playwright)로 눌러 보며 40개 시나리오를 확인합니다. 테스트용 DB는 매번 새로 만들어졌다 사라지므로 **운영 DB를 전혀 건드리지 않습니다.**
 
 | 묶음 | 내용 |
 |---|---|
@@ -229,7 +229,7 @@ npx playwright test          # 기본 대상: http://localhost:8080 (로컬 Comp
 
 | 워크플로 | 언제 | 하는 일 |
 |---|---|---|
-| `e2e` | 모든 PR, main 푸시 | `docker compose`로 전체 스택을 띄우고 Playwright로 36개 시나리오 확인 (운영 DB 미사용) |
+| `e2e` | 모든 PR, main 푸시 | `docker compose`로 전체 스택을 띄우고 Playwright로 40개 시나리오 확인 (운영 DB 미사용) |
 | `docker` | 모든 PR, main 푸시 | 이미지 빌드 → 기본 설정으로 실행 → 화면·스크립트 응답 확인 |
 | `db` | 마이그레이션·시드가 바뀐 PR | 빈 Postgres(PGlite)에 마이그레이션을 처음부터 적용해 깨지지 않는지, 두 번 적용해도 안전한지 확인 |
 | `secrets` | 모든 PR, main 푸시 | gitleaks로 전체 커밋 이력의 API 키·토큰·비밀번호·개인 이메일 검사, PR 커밋 작성자 이메일이 noreply인지 확인 |
