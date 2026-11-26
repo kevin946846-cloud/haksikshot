@@ -15,11 +15,11 @@ const kDay0=(t=Date.now())=>Math.floor((t+KST)/864e5)*864e5-KST;   // 그날 한
 function lastReset(){const now=Date.now(),r=kDay0(now)+19*36e5;return now<r?r-864e5:r}
 function purgeSold(){const r=lastReset();let ch=false;Object.keys(st.sold).forEach(id=>{if(st.sold[id].at<r){delete st.sold[id];ch=true}});return ch}
 purgeSold();
-function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){toast("저장 공간이 부족해 일부 사진이 저장되지 않았어요")}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){toast(L("저장 공간이 부족해 일부 사진이 저장되지 않았어요","Storage is full, so some photos weren't saved"))}}
 
 const $=s=>document.querySelector(s);
 const DAY=864e5,SLOTS=["아침","점심","저녁"];
-const won=n=>n.toLocaleString("ko-KR")+"원";
+const won=n=>LANG==="en"?"₩"+n.toLocaleString("en-US"):n.toLocaleString("ko-KR")+"원";
 // 아이콘은 SVG로 한 곳에 정의해 재사용 (텍스트 기호는 기기·글꼴마다 모양이 달라짐)
 const SVG_A='class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"',STAR_D="M12 2.5l2.94 5.96 6.56.95-4.75 4.63 1.12 6.54L12 17.5l-5.87 3.08 1.12-6.54L2.5 9.41l6.56-.95Z",STROKE='fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
 const ICON={
@@ -28,11 +28,11 @@ const ICON={
   up:`<svg ${SVG_A} ${STROKE}><path d="m6 15 6-6 6 6"/></svg>`,
   down:`<svg ${SVG_A} ${STROKE}><path d="m6 9 6 6 6-6"/></svg>`
 };
-const stars=n=>`<span role="img" aria-label="별점 ${n}점">${ICON.star.repeat(n)}${ICON.starOff.repeat(5-n)}</span>`;
+const stars=n=>`<span role="img" aria-label="${L(`별점 ${n}점`,`${n} out of 5 stars`)}">${ICON.star.repeat(n)}${ICON.starOff.repeat(5-n)}</span>`;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const ago=t=>{const m=Math.max(0,Math.round((Date.now()-t)/6e4));return m<1?"방금":m<60?m+"분 전":m<1440?Math.round(m/60)+"시간 전":Math.floor(m/1440)+"일 전"};
-const dayLabel=t=>{const k=kst(t);return `${k.mo}/${k.d} (${"일월화수목금토"[k.w]})`};
-const stampOf=t=>`${dayLabel(t)} ${new Date(t).toLocaleTimeString("ko-KR",{hour:"numeric",minute:"2-digit",timeZone:"Asia/Seoul"})}`;
+const ago=t=>{const m=Math.max(0,Math.round((Date.now()-t)/6e4));return LANG==="en"?(m<1?"just now":m<60?m+" min ago":m<1440?Math.round(m/60)+" hr ago":Math.floor(m/1440)+" days ago"):(m<1?"방금":m<60?m+"분 전":m<1440?Math.round(m/60)+"시간 전":Math.floor(m/1440)+"일 전")};
+const dayLabel=t=>{const k=kst(t);return `${k.mo}/${k.d} (${WD[LANG][k.w]})`};
+const stampOf=t=>`${dayLabel(t)} ${new Date(t).toLocaleTimeString(LANG==="en"?"en-US":"ko-KR",{hour:"numeric",minute:"2-digit",timeZone:"Asia/Seoul"})}`;
 const isToday=t=>kDay0(t)===kDay0();
 const nowSlot=()=>{const h=kst().h;return h<11?"아침":h<16?"점심":"저녁"};
 const QUICK=[
@@ -42,7 +42,8 @@ const QUICK=[
  {k:"smell",label:"냄새",opts:["괜찮음","느끼함","기름 냄새","고기 잡내"],optsFor:m=>["괜찮음","느끼함",...(m.tags.includes("튀김")?["기름 냄새"]:[]),...(m.tags.includes("고기")?["고기 잡내"]:[])],only:m=>m.tags.includes("튀김")||m.tags.includes("고기")},
  {k:"again",label:"또 먹을래?",opts:["또 먹을래요","글쎄요","다신 안 먹어요"]}
 ];
-const fText=f=>f?QUICK.map(q=>f[q.k]?(q.k==="again"?f[q.k]:`${q.label} ${f[q.k]}`):"").filter(Boolean).join(" · "):"";
+const fText=f=>f?QUICK.map(q=>f[q.k]?(q.k==="again"?tr(f[q.k]):`${tr(q.label)} ${tr(f[q.k])}`):"").filter(Boolean).join(" · "):"";
 let sortBy="low",cat="일품",goal="bulk",rankScope="wk",openId=null,busy={},slotOpen=false,draft={s:0,t:"",f:{}},lastMsg=null;
-const d0=kst();$("#today").innerHTML=`${d0.mo}월 ${d0.d}일 (${"일월화수목금토"[d0.w]})<br>다래락 · 나비센터 1층`;
+function renderToday(){const d0=kst();$("#today").innerHTML=L(`${d0.mo}월 ${d0.d}일 (${WD.ko[d0.w]})<br>다래락 · 나비센터 1층`,`${WD.en[d0.w]}, ${MON[d0.mo-1]} ${d0.d}<br>Daraerak cafeteria · 나비센터 1F`)}
+renderToday();
 function toast(m,mood){const t=$("#toast");t.textContent=m;if(mood)t.insertAdjacentHTML("afterbegin",BAP(mood,"bap bap-t"));t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2400)}

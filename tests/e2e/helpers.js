@@ -2,12 +2,19 @@
 const { expect } = require("@playwright/test");
 
 // 앱이 익명 로그인을 마치고 첫 데이터까지 받을 때까지 기다림
-async function openApp(page) {
+// 첫 화면(밥톨이 인트로)은 사용자처럼 '메뉴판 보기'를 눌러 넘김. keepIntro면 인트로에 머묾
+async function openApp(page, { keepIntro = false } = {}) {
   page.on("dialog", (d) => d.accept());   // 앱의 confirm()은 '확인'으로
   await page.goto("/");
   await page.waitForFunction(() => typeof me !== "undefined" && !!me, null, { timeout: 30_000 });
   await page.waitForLoadState("networkidle");   // 첫 hydrate(서버 데이터 받기)가 끝날 때까지
+  if (keepIntro) { await expect(page.locator("#intro")).toBeVisible(); return; }
+  await passIntro(page);
   await expect(page.locator("#menus .tile").first()).toBeVisible();
+}
+async function passIntro(page) {
+  if (await page.locator("#intro").isVisible()) await page.locator("#intro [data-intro-go]").click();
+  await expect(page.locator("#intro")).toBeHidden();
 }
 
 // 브라우저 안에서 Supabase 클라이언트(sb)로 직접 조회·쓰기
@@ -56,4 +63,4 @@ const serverRows = (page, table, filter = {}) =>
 const ctxOpts = (u) => ({ viewport: u.viewport, userAgent: u.userAgent, deviceScaleFactor: u.deviceScaleFactor,
   isMobile: u.isMobile, hasTouch: u.hasTouch, locale: u.locale, timezoneId: u.timezoneId, baseURL: u.baseURL });
 
-module.exports = { ctxOpts, openApp, db, cleanup, closeDialogs, openMenu, eat, serverRows };
+module.exports = { ctxOpts, openApp, passIntro, db, cleanup, closeDialogs, openMenu, eat, serverRows };

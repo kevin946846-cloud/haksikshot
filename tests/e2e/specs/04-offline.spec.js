@@ -13,7 +13,7 @@ test("외부 CDN이 막혀도 앱이 뜨고 글꼴과 로그인이 된다", asyn
   const page = await ctx.newPage();
   try {
     await openApp(page);                                   // supabase-js가 로드돼야 로그인(me)이 생김
-    await expect(page.locator("section.tkt")).toBeVisible();
+    await expect(page.locator("#menus .tile").first()).toBeVisible();
     const fonts = await page.evaluate(async () => {
       await document.fonts.ready;
       return { jua: document.fonts.check("16px Jua", "오늘 뭐 먹지"), noto: document.fonts.check("16px 'Noto Sans KR'", "학식") };
