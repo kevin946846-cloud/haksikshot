@@ -1,4 +1,5 @@
 // CDN이 막힌 학교망 가정: Supabase 말고 바깥 주소는 전부 차단해도 화면·글꼴·로그인이 정상인지
+// 글꼴은 글자 구간별로 필요할 때만 받으므로, 메뉴판에 실제로 보이는 로고 글자(학식샷)로 확인
 const { test, expect } = require("@playwright/test");
 const { ctxOpts, openApp, cleanup } = require("../helpers");
 
@@ -16,7 +17,7 @@ test("외부 CDN이 막혀도 앱이 뜨고 글꼴과 로그인이 된다", asyn
     await expect(page.locator("#menus .tile").first()).toBeVisible();
     const fonts = await page.evaluate(async () => {
       await document.fonts.ready;
-      return { jua: document.fonts.check("16px Jua", "오늘 뭐 먹지"), noto: document.fonts.check("16px 'Noto Sans KR'", "학식") };
+      return { jua: document.fonts.check("16px Jua", "학식샷"), noto: document.fonts.check("16px 'Noto Sans KR'", "학식") };
     });
     expect(fonts).toEqual({ jua: true, noto: true });
     expect(blocked, "앱이 바깥 주소를 부르면 안 됨").toEqual([]);
