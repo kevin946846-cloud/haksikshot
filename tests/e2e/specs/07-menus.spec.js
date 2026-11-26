@@ -41,8 +41,8 @@ test("DB에서 가격 변경·새 메뉴·판매 중단을 하면 다시 배포�
   });
   await openApp(page);
   try {
-    await expect(page.locator('#ticketbar .tc[data-c="일품"] b')).toHaveText("14");
-    await expect(page.locator('#ticketbar .tc[data-c="양식"] b')).toHaveText("8");
+    await expect(page.locator('.cat[data-c="일품"] small')).toHaveText(/\/14$/);
+    await expect(page.locator('.cat[data-c="양식"] small')).toHaveText(/\/8$/);
     await page.locator('.cat[data-c="일품"]').click();
     await expect(page.locator('#menus [data-open="i4"]')).toContainText("날치알밥(가격 인하)");
     await expect(page.locator('#menus [data-open="i4"]')).toContainText("3,900원");

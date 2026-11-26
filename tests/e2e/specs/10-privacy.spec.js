@@ -3,6 +3,7 @@ const { test, expect } = require("@playwright/test");
 
 test("앱에서 개인정보 안내로 이동, 모으는 정보·지우는 방법 안내", async ({ page }) => {
   await page.goto("/");
+  await page.locator("#intro [data-intro-go]").click();
   await page.locator('.proto a[href="privacy"]').click();
   await expect(page).toHaveURL(/\/privacy$/);
   await expect(page.locator("h1 small")).toHaveText("개인정보 안내");

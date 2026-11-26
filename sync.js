@@ -7,26 +7,26 @@ const hy = ms => { clearTimeout(hy.t); hy.t = setTimeout(hydrate, ms) };
 
 function track(p, quiet) {  // 쓰기 요청: 실패하면 서버 상태로 되돌림
   const x = Promise.resolve(p).then(r => { if (r && r.error) throw r.error })
-    .catch(e => { console.error(e); if (!quiet) { toast("저장하지 못했어요. 다시 시도해 주세요"); lastSig = "" } });
+    .catch(e => { console.error(e); if (!quiet) { toast(L("저장하지 못했어요. 다시 시도해 주세요","Couldn't save. Please try again")); lastSig = "" } });
   Q.push(x); x.finally(() => { Q.splice(Q.indexOf(x), 1); if (!quiet) hy(500) }); return x;
 }
 
 const API = {
   eat: (id, slot) => {
-    if (!me) { toast("로그인 세션을 불러오는 중이에요. 잠시 후 다시 시도해 주세요."); return Promise.resolve(); }
+    if (!me) { toast(L("로그인 세션을 불러오는 중이에요. 잠시 후 다시 시도해 주세요.","Still signing you in. Please try again in a moment.")); return Promise.resolve(); }
     return track(sb.from("meals").insert({ user_id: me, menu_id: id, slot }));
   },
   uneat: id => {
     // 오늘(한국 날짜) 기록만 지움
-    if (!me) { toast("로그인 세션을 불러오는 중이에요. 잠시 후 다시 시도해 주세요."); return Promise.resolve(); }
+    if (!me) { toast(L("로그인 세션을 불러오는 중이에요. 잠시 후 다시 시도해 주세요.","Still signing you in. Please try again in a moment.")); return Promise.resolve(); }
     return track(sb.from("meals").delete().eq("user_id", me).eq("menu_id", id).eq("day", new Date(kDay0() + KST).toISOString().slice(0, 10)));
   },
   review: (id, r) => {
-    if (!me) { toast("로그인 세션을 불러오는 중이에요. 잠시 후 다시 시도해 주세요."); return Promise.resolve(); }
+    if (!me) { toast(L("로그인 세션을 불러오는 중이에요. 잠시 후 다시 시도해 주세요.","Still signing you in. Please try again in a moment.")); return Promise.resolve(); }
     return track(sb.from("reviews").upsert({ user_id: me, menu_id: id, stars: r.s, body: r.t, feedback: r.f }, { onConflict: "user_id,menu_id" }));
   },
   vote: (k, v) => {
-    if (!me) { toast("로그인 세션을 불러오는 중이에요. 잠시 후 다시 시도해 주세요."); return Promise.resolve(); }
+    if (!me) { toast(L("로그인 세션을 불러오는 중이에요. 잠시 후 다시 시도해 주세요.","Still signing you in. Please try again in a moment.")); return Promise.resolve(); }
     const [week, id] = k.split("|"); 
     return track(v ? sb.from("votes").upsert({ user_id: me, week, menu_id: id, v }, { onConflict: "user_id,week,menu_id" }) : sb.from("votes").delete().eq("user_id", me).eq("week", week).eq("menu_id", id));
   },
@@ -39,14 +39,14 @@ const API = {
 async function callVerify(kind, file, m) {
   try {
     const image = await shrink(file);
-    const call = sb.functions.invoke("verify-photo", { body: { kind, menuId: m.id, menuName: m.name, cat: m.cat, n: m.n, image } });
+    const call = sb.functions.invoke("verify-photo", { body: { kind, menuId: m.id, menuName: m.name, cat: m.cat, n: m.n, image, lang: LANG } });
     const late = new Promise(r => setTimeout(() => r("timeout"), 25000));   // 서버가 오래 걸려도 화면은 25초 뒤 풀어 줌
     const res = await Promise.race([call, late]);
-    if (res === "timeout") { hy(5000); return { ok: false, reason: "확인이 오래 걸리고 있어요. 잠시 뒤 새로고침하면 결과가 반영돼요" } }
+    if (res === "timeout") { hy(5000); return { ok: false, reason: L("확인이 오래 걸리고 있어요. 잠시 뒤 새로고침하면 결과가 반영돼요","The check is taking a while. Refresh shortly to see the result") } }
     const { data, error } = res;
     hy(800);
-    return error || !data ? { ok: false, reason: "서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요" } : data;
-  } catch (e) { return { ok: false, reason: "사진을 읽지 못했어요. 다른 사진을 골라 주세요" } }
+    return error || !data ? { ok: false, reason: L("서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요","Couldn't reach the server. Please try again shortly") } : data;
+  } catch (e) { return { ok: false, reason: L("사진을 읽지 못했어요. 다른 사진을 골라 주세요","Couldn't read the photo. Please pick another one") } }
 }
 aiCheckFood = async (file, m) => { const r = await callVerify("food", file, m); if (!r.ok) return { match: false, reason: r.reason }; return r.verified ? { match: true, reason: r.reason, portion: r.portion, nutrition: r.nutrition } : { skipped: true } };
 aiCheckSold = async (file, m) => { const r = await callVerify("sold", file, m); return r.ok ? { ok: true, reason: r.reason } : { ok: false, reason: r.reason } };
@@ -81,7 +81,7 @@ async function hydrate() {
     if (sig === lastSig) return; lastSig = sig;
     saveSnap(data);
     applySnap(data);
-  } catch (e) { console.error(e); lastSig = ""; if (!hydrate.warned) { hydrate.warned = true; toast("서버에서 데이터를 불러오지 못했어요") } }
+  } catch (e) { console.error(e); lastSig = ""; if (!hydrate.warned) { hydrate.warned = true; toast(L("서버에서 데이터를 불러오지 못했어요","Couldn't load data from the server")) } }
 }
 
 // ── 캐시: 마지막으로 받은 서버 데이터를 기기에 저장 → 다음에 열 때 네트워크를 기다리지 않고 바로 그림 ──
@@ -120,13 +120,13 @@ function applySnap([my, rt, rc, ph, so, ml, ws, mv, vc, rh, wcs, mn]) {
     wcs.forEach(r => wcStats(r.theme)[r.menu_id] = { w: r.w, l: r.l, champ: r.champ });
     if (document.activeElement && document.activeElement.tagName === "TEXTAREA") { pendingRender = true; return }
     render();
-  } catch (e) { console.error(e); lastSig = ""; if (!hydrate.warned) { hydrate.warned = true; toast("서버에서 데이터를 불러오지 못했어요") } }
+  } catch (e) { console.error(e); lastSig = ""; if (!hydrate.warned) { hydrate.warned = true; toast(L("서버에서 데이터를 불러오지 못했어요","Couldn't load data from the server")) } }
 }
 
 (async () => {
-  if (CFG.url.includes("YOUR-")) { toast("config.js에 Supabase 주소와 키를 넣어 주세요"); return }
+  if (CFG.url.includes("YOUR-")) { toast(L("config.js에 Supabase 주소와 키를 넣어 주세요","Put the Supabase URL and key in config.js")); return }
   let { data: { session } } = await sb.auth.getSession();
-  if (!session) { const r = await sb.auth.signInAnonymously(); if (r.error) { toast("서버에 연결하지 못했어요"); return } session = r.data.session }
+  if (!session) { const r = await sb.auth.signInAnonymously(); if (r.error) { toast(L("서버에 연결하지 못했어요","Couldn't reach the server")); return } session = r.data.session }
   me = session.user.id; loadSnap(); await hydrate(); loadAcct();
   sb.channel("live").on("postgres_changes", { event: "*", schema: "public" }, () => hy(500)).subscribe();
   setInterval(() => { if (!document.hidden) hy(0) }, 30000);   // 탭이 안 보일 때는 다시 받지 않음
@@ -139,38 +139,38 @@ const acct = { made: null, code: null, restoring: false };
 const BOX = "background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px";
 const INP = "font:inherit;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);text-transform:uppercase";
 function renderAcct() {
-  $("#acct").innerHTML = `<h2>기록 보관</h2><div style="${BOX}">
-    <span class="hint">폰을 바꾸거나 브라우저 데이터를 지워도, 복구 코드가 있으면 내 기록(먹음 체크·평가·투표)을 되찾을 수 있어요. 가입은 필요 없어요.</span>
+  $("#acct").innerHTML = `<h2>${L("기록 보관","Keep my records")}</h2><div style="${BOX}">
+    <span class="hint">${L("폰을 바꾸거나 브라우저 데이터를 지워도, 복구 코드가 있으면 내 기록(먹음 체크·평가·투표)을 되찾을 수 있어요. 가입은 필요 없어요.","Even if you change phones or clear browser data, a recovery code brings back your records (meal checks, reviews, votes). No sign-up needed.")}</span>
     ${acct.code
       ? `<div style="font:700 22px/1.2 ui-monospace,monospace;text-align:center;padding:10px 0;user-select:all">${acct.code}</div>
-         <span class="hint" style="color:var(--sold)">이 코드는 다시 볼 수 없어요. 지금 캡처하거나 메모해 두세요. 코드를 아는 사람은 누구나 내 기록을 가져갈 수 있어요.</span>
-         <button class="btn" data-acct="copy">코드 복사</button>`
-      : `<button class="btn primary" data-acct="make">${acct.made ? "복구 코드 다시 만들기" : "복구 코드 만들기"}</button>
-         ${acct.made ? '<span class="hint">이미 만든 코드가 있어요. 다시 만들면 이전 코드는 쓸 수 없어요.</span>' : ""}`}
+         <span class="hint" style="color:var(--sold)">${L("이 코드는 다시 볼 수 없어요. 지금 캡처하거나 메모해 두세요. 코드를 아는 사람은 누구나 내 기록을 가져갈 수 있어요.","You won't see this code again. Take a screenshot or write it down now. Anyone with the code can take your records.")}</span>
+         <button class="btn" data-acct="copy">${L("코드 복사","Copy code")}</button>`
+      : `<button class="btn primary" data-acct="make">${acct.made ? L("복구 코드 다시 만들기","Make a new recovery code") : L("복구 코드 만들기","Make a recovery code")}</button>
+         ${acct.made ? `<span class="hint">${L("이미 만든 코드가 있어요. 다시 만들면 이전 코드는 쓸 수 없어요.","You already have a code. Making a new one disables the old one.")}</span>` : ""}`}
     ${acct.restoring
-      ? `<input id="acct-in" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" style="${INP}"><button class="btn primary" data-acct="restore">입장하기</button>`
-      : `<button class="btn" data-acct="open">복구 코드로 입장</button>`}
+      ? `<input id="acct-in" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" style="${INP}"><button class="btn primary" data-acct="restore">${L("입장하기","Restore")}</button>`
+      : `<button class="btn" data-acct="open">${L("복구 코드로 입장","Restore with a code")}</button>`}
   </div>`;
 }
 async function loadAcct() { const { data } = await sb.rpc("recovery_created_at"); acct.made = data || null; renderAcct() }
 document.getElementById("acct").addEventListener("click", async e => {
   const b = e.target.closest("[data-acct]"); if (!b) return; const a = b.dataset.acct;
   if (a === "open") { acct.restoring = true; renderAcct(); return }
-  if (a === "copy") { try { await navigator.clipboard.writeText(acct.code); toast("복사했어요") } catch (_) { toast("코드를 길게 눌러 직접 복사해 주세요") } return }
+  if (a === "copy") { try { await navigator.clipboard.writeText(acct.code); toast(L("복사했어요","Copied")) } catch (_) { toast(L("코드를 길게 눌러 직접 복사해 주세요","Long-press the code to copy it")) } return }
   if (a === "make") {
-    if (acct.made && !confirm("다시 만들면 이전 코드는 쓸 수 없어요. 계속할까요?")) return;
+    if (acct.made && !confirm(L("다시 만들면 이전 코드는 쓸 수 없어요. 계속할까요?","Making a new code disables the old one. Continue?"))) return;
     const { data, error } = await sb.rpc("create_recovery_code");
-    if (error || !data) { toast("코드를 만들지 못했어요. 다시 시도해 주세요"); return }
+    if (error || !data) { toast(L("코드를 만들지 못했어요. 다시 시도해 주세요","Couldn't make a code. Please try again")); return }
     acct.code = data; acct.made = new Date().toISOString(); renderAcct(); return;
   }
   if (a === "restore") {
     const code = $("#acct-in").value.trim();
-    if (code.replace(/[^0-9a-f]/gi, "").length !== 16) { toast("코드 16자리를 확인해 주세요"); return }
-    if ((st.meals.length || Object.keys(st.mine).length) && !confirm("이 기기의 현재 기록은 복구 코드의 기록으로 바뀌어요. 계속할까요?")) return;
+    if (code.replace(/[^0-9a-f]/gi, "").length !== 16) { toast(L("코드 16자리를 확인해 주세요","Please check the 16-character code")); return }
+    if ((st.meals.length || Object.keys(st.mine).length) && !confirm(L("이 기기의 현재 기록은 복구 코드의 기록으로 바뀌어요. 계속할까요?","Records on this device will be replaced with the ones from the code. Continue?"))) return;
     const { data, error } = await sb.rpc("restore_account", { p_code: code });
-    if (error) { toast("복구하지 못했어요. 다시 시도해 주세요"); return }
-    if (!data) { toast("코드가 맞지 않아요"); return }
-    acct.restoring = false; acct.code = null; lastSig = ""; await hydrate(); await loadAcct(); toast("기록을 복구했어요");
+    if (error) { toast(L("복구하지 못했어요. 다시 시도해 주세요","Couldn't restore. Please try again")); return }
+    if (!data) { toast(L("코드가 맞지 않아요","That code doesn't match")); return }
+    acct.restoring = false; acct.code = null; lastSig = ""; await hydrate(); await loadAcct(); toast(L("기록을 복구했어요","Records restored"));
   }
 });
 renderAcct();

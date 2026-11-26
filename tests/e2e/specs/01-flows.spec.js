@@ -1,30 +1,33 @@
 // 일반 흐름: 사용자가 매일 하는 동작을 처음부터 끝까지 (화면 → 서버 → DB → 다시 화면)
 const { test, expect } = require("@playwright/test");
-const { ctxOpts, openApp, db, cleanup, closeDialogs, openMenu, eat, serverRows } = require("../helpers");
+const { ctxOpts, openApp, passIntro, db, cleanup, closeDialogs, openMenu, eat, serverRows } = require("../helpers");
 
 test.describe.serial("일반 흐름", () => {
   let ctx, page;
   test.beforeAll(async ({ browser }, info) => {
     ctx = await browser.newContext(ctxOpts(info.project.use));
     page = await ctx.newPage();
-    await openApp(page);
+    await openApp(page, { keepIntro: true });
   });
   test.afterAll(async () => { await cleanup(page); await ctx.close(); });
 
-  test("첫 화면이 식권 히어로로 시작한다", async () => {
-    const hero = page.locator("section.tkt");
-    await expect(hero).toBeVisible();
-    await expect(hero.locator("h2")).toHaveText(/오늘\s*뭐 먹지\?/);
-    await expect(hero.getByRole("link", { name: /메뉴 구경하기/ })).toBeVisible();
-    const box = await hero.boundingBox();
-    expect(box.y).toBeLessThan(400);   // 스크롤 없이 첫 화면에 보임
+  test("첫 화면은 밥톨이가 가운데서 '오늘의 학식은?' 하고 묻는 인트로", async () => {
+    const intro = page.locator("#intro");
+    await expect(intro).toBeVisible();
+    await expect(intro.locator("#intro-q")).toHaveText("오늘의 학식은?");
+    await expect(intro.locator("#intro-bap svg.bap")).toBeVisible();
+    await expect(page.locator("#menus")).toBeHidden();          // 메뉴판은 인트로를 넘겨야 보임
+    const box = await intro.locator("#intro-bap").boundingBox();
+    expect(box.width).toBeGreaterThan(150);                      // 캐릭터를 크게
+    expect(Math.abs(box.x + box.width / 2 - page.viewportSize().width / 2)).toBeLessThan(4);   // 가운데
   });
 
-  test("식권 스텁의 메뉴 수가 실제 메뉴 수와 같고, 누르면 그 탭으로 간다", async () => {
+  test("인트로의 분류별 메뉴 수가 실제와 같고, 누르면 그 분류 메뉴판으로 바로 간다", async () => {
     const counts = await db(page, () => ["일품", "양식", "분식"].map((c) => MENUS.filter((m) => m.cat === c).length));
     for (const [i, c] of ["일품", "양식", "분식"].entries())
       await expect(page.locator(`#ticketbar .tc[data-c="${c}"] b`)).toHaveText(String(counts[i]));
     await page.locator('#ticketbar .tc[data-c="양식"]').click();
+    await expect(page.locator("#intro")).toBeHidden();
     await expect(page.locator('.cat[data-c="양식"]')).toHaveAttribute("aria-selected", "true");
     await expect(page.locator("#menus .tile")).toHaveCount(counts[1]);
     await page.locator('.cat[data-c="일품"]').click();

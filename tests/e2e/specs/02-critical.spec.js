@@ -126,7 +126,8 @@ test.describe("크리티컬 케이스", () => {
     page.on("pageerror", (e) => errors.push(e.message));
     try {
       await page.goto("/");
-      await expect(page.locator("section.tkt")).toBeVisible();
+      await expect(page.locator("#intro")).toBeVisible();
+      await page.locator("#intro [data-intro-go]").click();
       await expect(page.locator("#menus .tile")).not.toHaveCount(0);
       await expect(page.locator("#toast")).toContainText(/서버에 연결하지 못했어요|불러오지 못했어요/, { timeout: 20_000 });
       // 로그인 전에 먹음 체크를 눌러도 앱이 멈추지 않고 안내만 함
