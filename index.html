@@ -15,9 +15,7 @@
 </head><body class="intro-on">
 
 <section id="intro" class="intro" aria-label="첫 화면">
-  <div class="lang" role="group" aria-label="Language">
-    <button data-lang="ko" aria-pressed="true">한국어</button><button data-lang="en" aria-pressed="false">English</button>
-  </div>
+  <select class="langsel" data-langsel aria-label="Language / 언어"><option value="ko">한국어</option><option value="en">English</option><option value="zh">中文</option><option value="vi">Tiếng Việt</option><option value="ja">日本語</option></select>
   <p class="intro-date" id="intro-date"></p>
   <button class="intro-go" id="intro-go" data-en-label="See today's menu" aria-label="오늘 메뉴판 보기">
     <span class="bubble" id="intro-q">오늘의 학식은?</span>
@@ -32,7 +30,7 @@
 <div class="app">
   <header>
     <h1>학식<span>샷</span><i class="bap-logo" id="bap-logo"></i></h1>
-    <div class="hright"><div class="lang sm" role="group" aria-label="Language"><button data-lang="ko" aria-pressed="true">KO</button><button data-lang="en" aria-pressed="false">EN</button></div><div class="date" id="today"></div></div>
+    <div class="hright"><select class="langsel sm" data-langsel aria-label="Language / 언어"><option value="ko">한국어</option><option value="en">English</option><option value="zh">中文</option><option value="vi">Tiếng Việt</option><option value="ja">日本語</option></select><div class="date" id="today"></div></div>
   </header>
   <p class="proto"><span data-en="Beta. Menus and prices follow the Daraerak kiosk; nutrition and restaurant prices are estimates.">베타 버전이에요. 메뉴·가격은 다래락 키오스크 기준이고, 영양성분과 시중가는 추정치예요.</span> <a href="privacy" data-en="Privacy">개인정보 안내</a></p>
 
@@ -100,7 +98,9 @@
 <script src="vendor/supabase-js-2.45.4.min.js"></script>
 <script src="config.js"></script>
 <script src="js/i18n.js"></script>
+<script src="js/i18n-more.js"></script>
 <script src="js/menu-info.js"></script>
+<script src="js/menu-i18n.js"></script>
 <script src="js/data.js"></script>
 <script src="js/core.js"></script>
 <script src="js/icons.js"></script>
