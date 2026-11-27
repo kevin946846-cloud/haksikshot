@@ -76,11 +76,11 @@ function show(v){
 const INTRO_KEY="haksikshot-intro-seen";
 function closeIntro(){
   const i=$("#intro");try{sessionStorage.setItem(INTRO_KEY,"1")}catch(e){}
-  $("#intro-bap").innerHTML=BAP("happy","bap");   // 누르면 웃으면서 메뉴판으로
+  const ib=$("#intro-bap");ib.innerHTML=BAP("happy","bap");ib.dataset.mood="happy";   // 누르면 웃으면서 메뉴판으로
   document.body.classList.remove("intro-on");show("menu");i.classList.add("out");
   setTimeout(()=>{if(i.classList.contains("out"))i.hidden=true},matchMedia("(prefers-reduced-motion: reduce)").matches?0:380);
 }
 const skipIntro=(()=>{try{return !!sessionStorage.getItem(INTRO_KEY)}catch(e){return false}})();
 if(skipIntro){$("#intro").hidden=true;document.body.classList.remove("intro-on")}
 function onLang(){render();if(typeof renderAcct==="function")renderAcct()}
-$("#intro-bap").innerHTML=BAP("think","bap");$("#bap-logo").innerHTML=BAP("happy");applyStatic();save();render();
+$("#bap-logo").innerHTML=BAP("happy");applyStatic();save();render();
