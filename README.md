@@ -133,7 +133,7 @@ docker compose up -d --build      # 처음엔 이미지를 받느라 몇 분 걸
 | 무엇 | 어디에 | 효과 |
 | --- | --- | --- |
 | 마지막으로 받은 데이터 캐시 | 브라우저 localStorage (`haksikshot-snap-v2`) | 앱을 다시 열면 네트워크를 기다리지 않고 바로 그림, 그 뒤 새 데이터로 교체 |
-| 스크립트 캐시 | `vercel.json`, `docker/nginx.conf` | `css/`·`js/`·`sync.js`·`config.js`는 10분 캐시, `index.html`은 항상 새 버전 확인 |
+| 스크립트 캐시 | `vercel.json`, `docker/nginx.conf` | `index.html`과 `css/`·`js/`는 매번 새 버전 확인(안 바뀌었으면 304로 가볍게). 예전엔 스크립트를 10분 캐시했는데, 배포 직후 새 HTML과 예전 JS가 섞여 화면이 깨질 수 있어 바꿨음. 파일 이름에 버전이 붙은 `vendor/`(라이브러리·글꼴)만 7일 캐시 |
 | 백그라운드 탭 | `sync.js` | 탭이 안 보일 때는 30초마다 다시 받지 않음 |
 | DB 인덱스 | `supabase/migrations/…_baseline.sql` | 주간 집계(meals.created_at), 투표(votes.week), 품절·사진(created_at) |
 
