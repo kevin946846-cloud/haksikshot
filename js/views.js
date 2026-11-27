@@ -62,11 +62,17 @@ function renderSlotbar(){
   $("#slotbar").innerHTML=L(`오늘 먹음 체크 ${tm.length}/3`,`Meals today ${tm.length}/3`)+SLOTS.map(s=>`<span class="sl${slotUsed(s)?" on":""}">${tr(s)}</span>`).join("");
 }
 function renderCats(){$("#cats").innerHTML=["일품","양식","분식"].map(c=>{const all=MENUS.filter(m=>m.cat===c),n=all.filter(avail).length;return `<button class="cat" role="tab" aria-selected="${c===cat}" data-c="${c}">${tr(c)}<small>${n}/${all.length}</small></button>`}).join("")}
+// 첫 화면 밥톨이: 아침엔 졸려서 하품, 점심엔 숟가락 들고 신남, 저녁엔 배 두드리며 느긋
+const SLOT_MOOD={"아침":"morning","점심":"lunch","저녁":"dinner"};
+const SLOT_LINE={"아침":["졸린 아침, 든든하게 시작해요","Sleepy morning — start it right"],"점심":["배꼽시계가 울리는 점심 시간","Lunchtime! Your tummy is calling"],"저녁":["오늘도 수고했어요, 저녁 시간","Long day? Dinner time"]};
 // ── 렌더: 첫 화면(인트로) ── 밥톨이가 "오늘의 학식은?" 하고 묻고, 누르면 메뉴판으로
 function renderIntro(){
   const d=kst(),s=nowSlot(),so=MENUS.filter(m=>!avail(m)).length;
   $("#intro-q").textContent=L("오늘의 학식은?",`What's for ${tr(s).toLowerCase()} today?`);
-  $("#intro-date").textContent=L(`${d.mo}월 ${d.d}일 (${WD.ko[d.w]}) · 지금은 ${s} 시간`,`${WD.en[d.w]}, ${MON[d.mo-1]} ${d.d} · ${tr(s)} time`);
+  const mood=SLOT_MOOD[s],line=SLOT_LINE[s];
+  $("#intro-date").textContent=L(`${d.mo}월 ${d.d}일 (${WD.ko[d.w]}) · ${line[0]}`,`${WD.en[d.w]}, ${MON[d.mo-1]} ${d.d} · ${line[1]}`);
+  const ib=$("#intro-bap");   // 시간대마다 밥톨이 표정·행동이 바뀜 (넘어가는 중엔 웃는 얼굴 유지)
+  if(!$("#intro").classList.contains("out")&&ib.dataset.mood!==mood){ib.innerHTML=BAP(mood,`bap bap-${mood}`);ib.dataset.mood=mood}
   $("#ticketbar").innerHTML=["일품","양식","분식"].map(c=>`<button class="tc" data-c="${c}"><small>${tr(c)}</small><b>${MENUS.filter(m=>m.cat===c).length}</b></button>`).join("")+`<div class="so">${L("지금 품절","Sold out now")} <b>${so}</b></div>`;
 }
 function tile(m){

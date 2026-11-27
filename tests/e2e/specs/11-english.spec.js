@@ -92,3 +92,22 @@ test("English: 먹음 체크 알림과 AI 사진 확인 서버 응답도 영어"
     await expect(page.locator("#toast")).toContainText("Lunch checked!");
   } finally { await cleanup(page); }
 });
+
+test("첫 화면 밥톨이는 아침·점심·저녁마다 표정과 행동이 다르다", async ({ browser }, info) => {
+  const { ctxOpts } = require("../helpers");
+  const seen = [];
+  for (const [t, mood, ko] of [["08:00", "morning", "졸린 아침"], ["12:30", "lunch", "점심 시간"], ["18:30", "dinner", "저녁 시간"]]) {
+    const ctx = await browser.newContext(ctxOpts(info.project.use));
+    await ctx.clock.setFixedTime(new Date(`2026-11-27T${t}:00+09:00`));   // 한국 시간 기준으로 시각 고정
+    const page = await ctx.newPage();
+    try {
+      await openApp(page, { keepIntro: true });
+      await expect(page.locator(`#intro-bap svg.bap-${mood}`)).toBeVisible();
+      await expect(page.locator("#intro-date")).toContainText(ko);
+      seen.push(await page.locator("#intro-bap").innerHTML());
+      await passIntro(page);                                                  // 누르면 웃는 얼굴로 바뀌며 메뉴판
+      await expect(page.locator("#menus .tile").first()).toBeVisible();
+    } finally { await cleanup(page).catch(() => {}); await ctx.close(); }
+  }
+  expect(new Set(seen).size).toBe(3);
+});
