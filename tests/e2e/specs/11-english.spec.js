@@ -24,7 +24,7 @@ test("한국어 상세에 메뉴 소개·맵기·재료와 '직원에게 확인'
 test("English: 인트로에서 언어를 바꾸면 메뉴판·상세·탭이 영어로, 키오스크용 한국어 이름은 같이 보인다", async ({ page }) => {
   await openApp(page, { keepIntro: true });
   try {
-    await page.locator('#intro [data-lang="en"]').click();
+    await page.selectOption("#intro .langsel", "en");
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(page.locator("#intro-q")).toHaveText(/^What's for (breakfast|lunch|dinner) today\?$/);
     await expect(page.locator('#ticketbar .tc[data-c="일품"] small')).toHaveText("Korean");
@@ -42,7 +42,7 @@ test("English: 인트로에서 언어를 바꾸면 메뉴판·상세·탭이 영
       const out = [], w = document.createTreeWalker(document.querySelector(".app"), NodeFilter.SHOW_TEXT);
       for (let n; (n = w.nextNode());) {
         const el = n.parentElement, t = n.textContent.trim();
-        if (!t || !/[가-힣]/.test(t) || !el.offsetParent || el.closest("h1,.kn,.kname,[lang=ko],#today,.lang,#acct,#view-reco,#view-taste,#view-rank")) continue;
+        if (!t || !/[가-힣]/.test(t) || !el.offsetParent || el.closest("h1,.kn,.kname,[lang=ko],#today,select,#acct,#view-reco,#view-taste,#view-rank")) continue;
         out.push(t);
       }
       return out;
@@ -69,7 +69,7 @@ test("English: 인트로에서 언어를 바꾸면 메뉴판·상세·탭이 영
     await page.waitForFunction(() => typeof me !== "undefined" && !!me);
     await expect(page.locator("#intro")).toBeHidden();
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
-    await page.locator('header [data-lang="ko"]').click();
+    await page.selectOption("header .langsel", "ko");
     await expect(page.locator(".tab", { hasText: /^메뉴$/ })).toBeVisible();
     await expect(page.locator('#menus [data-open="i11"] .tn')).toHaveText("돼지국밥");
   } finally { await cleanup(page); }
@@ -78,7 +78,7 @@ test("English: 인트로에서 언어를 바꾸면 메뉴판·상세·탭이 영
 test("English: 먹음 체크 알림과 AI 사진 확인 서버 응답도 영어", async ({ page }) => {
   await openApp(page, { keepIntro: true });
   try {
-    await page.locator('#intro [data-lang="en"]').click();
+    await page.selectOption("#intro .langsel", "en");
     await passIntro(page);
     // 서버 함수: 먹음 체크 안 한 메뉴 사진 → 규칙에 걸린 이유가 영어로 (AI까지 가지 않음)
     const r = await db(page, async () => (await sb.functions.invoke("verify-photo", { body: { kind: "food", menuId: "i4", menuName: "날치알밥", cat: "일품", image: "data:image/jpeg;base64,AAAA", lang: "en" } })).data);
@@ -110,4 +110,40 @@ test("첫 화면 밥톨이는 아침·점심·저녁마다 표정과 행동이 �
     } finally { await cleanup(page).catch(() => {}); await ctx.close(); }
   }
   expect(new Set(seen).size).toBe(3);
+});
+
+test("中文·Tiếng Việt·日本語: 메뉴 43개 이름·소개가 있고, 화면 4개에 한국어·영어 문구가 남지 않는다", async ({ page }) => {
+  await openApp(page, { keepIntro: true });
+  try {
+    const missing = await db(page, () => ["zh", "vi", "ja"].flatMap((l) => MENUS.filter((m) => !(MENU_I18N[l][m.id] && MENU_I18N[l][m.id][0] && MENU_I18N[l][m.id][1])).map((m) => l + ":" + m.id)));
+    expect(missing).toEqual([]);
+    for (const [lang, q, cat, eat, html] of [["zh", /今天.+吃什么？/, "韩餐", "吃过了", "zh-CN"], ["vi", /Hôm nay .+ ăn gì\?/, "Món Hàn", "Tôi đã ăn", "vi"], ["ja", /今日の.+は何？/, "韓食", "食べた！", "ja"]]) {
+      await page.selectOption(".langsel:visible", lang);
+      await expect(page.locator("html")).toHaveAttribute("lang", html);
+      if (await page.locator("#intro").isVisible()) { await expect(page.locator("#intro-q")).toHaveText(q); await passIntro(page); }
+      await expect(page.locator('.cat[data-c="일품"]')).toContainText(cat);
+      await expect(page.locator('#menus [data-open="i11"] .kn')).toHaveText("돼지국밥");      // 키오스크용 한국어 이름은 항상
+      // 화면 4개에서 번역이 빠진 문구(한국어, 사전에 있는 영어 원문) 찾기
+      for (const tab of ["menu", "reco", "taste", "rank"]) {
+        await page.evaluate((t) => show(t), tab);
+        const left = await page.evaluate(() => {
+          const out = [], keys = new Set(Object.keys(DICT[LANG])), w = document.createTreeWalker(document.querySelector(".app"), NodeFilter.SHOW_TEXT);
+          for (let n; (n = w.nextNode());) {
+            const el = n.parentElement, t = n.textContent.trim();
+            if (!t || !el.offsetParent || el.closest("h1,.kn,.kname,[lang=ko],select,#today")) continue;
+            if (/[가-힣]/.test(t) || (keys.has(t) && DICT[LANG][t] !== t)) out.push(t);
+          }
+          return out;
+        });
+        expect(left, `${lang} ${tab}`).toEqual([]);
+      }
+      await page.evaluate(() => show("menu"));
+      await page.locator('#menus [data-open="i11"]').click();
+      await expect(page.locator('#detail [data-a="eat"]')).toContainText(eat);
+      await page.keyboard.press("Escape");
+    }
+    // 서버 함수: 한국어가 아닌 언어는 고정 안내를 영어로 보내고, 화면에서 그 언어로 바꿈
+    const r = await db(page, async () => { const d = (await sb.functions.invoke("verify-photo", { body: { kind: "food", menuId: "i4", menuName: "날치알밥", cat: "일품", image: "data:image/jpeg;base64,AAAA", lang: "ja" } })).data; return { raw: d.reason, shown: tx(d.reason) }; });
+    expect(r).toEqual({ raw: "You can only post photos of menus you checked today", shown: "今日「食べた」にした料理だけ写真を投稿できます" });
+  } finally { await cleanup(page); }
 });

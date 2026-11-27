@@ -4,7 +4,6 @@ $("#detail-close").addEventListener("click",()=>$("#detail").close());
 $("#detail").addEventListener("close",()=>{openId=null});
 $("#detail").addEventListener("input",e=>{if(e.target.id==="rv-text")draft.t=e.target.value});
 document.addEventListener("click",e=>{
-  const lg=e.target.closest("[data-lang]");if(lg){setLang(lg.dataset.lang);return}
   const ig=e.target.closest("#intro-go,[data-intro-go],#intro [data-c]");if(ig){if(ig.dataset.c)cat=ig.dataset.c;closeIntro();render();return}
   const wst=e.target.closest("[data-wcstart]");if(wst){startWC(wst.dataset.wcstart||"fav");return}
   if(e.target.closest(".wcsplash")&&wc){wc.splash=false;renderWC();return}
@@ -37,6 +36,7 @@ document.addEventListener("click",e=>{
   save();render();
 });
 document.addEventListener("change",async e=>{
+  if(e.target.matches("[data-langsel]")){setLang(e.target.value);return}
   const inp=e.target;if(!openId||!inp.files||!inp.files[0])return;const file=inp.files[0],id=openId,m=byId(id),a=inp.dataset.a;
   if(a!=="photo"&&a!=="soldphoto")return;
   busy[id]=a==="photo"?"photo":"sold";lastMsg=null;renderDetail();

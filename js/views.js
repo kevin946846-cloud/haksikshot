@@ -55,7 +55,7 @@ const GOALS={
 };
 
 // 가격을 천 원 단위로 짧게 (막대 그래프 옆)
-const k1=n=>LANG==="en"?"₩"+(n/1000).toFixed(1)+"k":(n/1000).toFixed(1)+"천";
+const k1=n=>LANG==="ko"?(n/1000).toFixed(1)+"천":"₩"+(n/1000).toFixed(1)+"k";
 // ── 렌더: 메뉴 ──
 function renderSlotbar(){
   const tm=todayMeals();
@@ -70,7 +70,7 @@ function renderIntro(){
   const d=kst(),s=nowSlot(),so=MENUS.filter(m=>!avail(m)).length;
   $("#intro-q").textContent=L("오늘의 학식은?",`What's for ${tr(s).toLowerCase()} today?`);
   const mood=SLOT_MOOD[s],line=SLOT_LINE[s];
-  $("#intro-date").textContent=L(`${d.mo}월 ${d.d}일 (${WD.ko[d.w]}) · ${line[0]}`,`${WD.en[d.w]}, ${MON[d.mo-1]} ${d.d} · ${line[1]}`);
+  $("#intro-date").textContent=`${fmtDate(d)} · ${L(...line)}`;
   const ib=$("#intro-bap");   // 시간대마다 밥톨이 표정·행동이 바뀜 (넘어가는 중엔 웃는 얼굴 유지)
   if(!$("#intro").classList.contains("out")&&ib.dataset.mood!==mood){ib.innerHTML=BAP(mood,`bap bap-${mood}`);ib.dataset.mood=mood}
   $("#ticketbar").innerHTML=["일품","양식","분식"].map(c=>`<button class="tc" data-c="${c}"><small>${tr(c)}</small><b>${MENUS.filter(m=>m.cat===c).length}</b></button>`).join("")+`<div class="so">${L("지금 품절","Sold out now")} <b>${so}</b></div>`;
@@ -78,7 +78,7 @@ function renderIntro(){
 function tile(m){
   const ph=st.photos[m.id],so=st.sold[m.id],r=rate(m.id,"all"),e=eatenToday(m.id);
   const badge=so?`<span class="badge sold">${L("품절","Sold out")}</span>`:e?`<span class="badge done">${tr(e.slot)}</span>`:st.plans[m.id]?`<span class="badge plan">${L("예정","Planned")}</span>`:"";
-  return `<button class="tile${so?" sold":""}" data-open="${m.id}">${badge}<span class="tno" aria-hidden="true"><span>${tr(m.cat)}</span><span>No.${m.id.slice(1).padStart(2,"0")}</span></span><span class="tt" aria-hidden="true">${foodIcon(m)}${ph?`<span class="hasph" title="${L("사진 있음","Has photo")}"><svg class="cam" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>`:""}</span><span class="perf" aria-hidden="true"></span><span class="tn">${esc(mname(m))}</span>${LANG==="en"&&info(m)?`<span class="kn" lang="ko">${esc(m.name)}</span>`:""}<span class="tp">${won(m.price)}${info(m)&&info(m).hot?`<span class="hot" aria-label="${L("매운 정도","Spicy")} ${info(m).hot}/3">${"●".repeat(info(m).hot)}</span>`:""}</span><span class="tr">${r.n?`<b>${ICON.star}</b> ${r.avg.toFixed(1)} (${r.n})`:L("평가 없음","No ratings")}</span></button>`;
+  return `<button class="tile${so?" sold":""}" data-open="${m.id}">${badge}<span class="tno" aria-hidden="true"><span>${tr(m.cat)}</span><span>No.${m.id.slice(1).padStart(2,"0")}</span></span><span class="tt" aria-hidden="true">${foodIcon(m)}${ph?`<span class="hasph" title="${L("사진 있음","Has photo")}"><svg class="cam" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>`:""}</span><span class="perf" aria-hidden="true"></span><span class="tn">${esc(mname(m))}</span>${LANG!=="ko"&&info(m)?`<span class="kn" lang="ko">${esc(m.name)}</span>`:""}<span class="tp">${won(m.price)}${info(m)&&info(m).hot?`<span class="hot" aria-label="${L("매운 정도","Spicy")} ${info(m).hot}/3">${"●".repeat(info(m).hot)}</span>`:""}</span><span class="tr">${r.n?`<b>${ICON.star}</b> ${r.avg.toFixed(1)} (${r.n})`:L("평가 없음","No ratings")}</span></button>`;
 }
 function renderMenus(){
   const SORTS={low:[L("가격 낮은 순","Price: low"),(a,b)=>a.price-b.price],high:[L("가격 높은 순","Price: high"),(a,b)=>b.price-a.price],star:[L("별점 순","Top rated"),(a,b)=>{const x=rate(a.id,"all"),y=rate(b.id,"all");return (y.n?1:0)-(x.n?1:0)||y.avg-x.avg||y.n-x.n||a.price-b.price}]};
@@ -170,7 +170,7 @@ function renderDetail(){
     :`<label class="btn">${b==="photo"?checking:L("메뉴 사진 올리기","Post a photo")}<input type="file" accept="image/*" data-a="photo"${b?" disabled":""}></label>`;
   const soldBtn=so?"":`<label class="btn warn">${b==="sold"?checking:L("품절 제보 (사진 필요)","Report sold out (photo)")}<input type="file" accept="image/*" data-a="soldphoto"${b?" disabled":""}></label>`;
   const nb=n=>`<div><b>${n.kcal}</b><span>kcal</span></div><div><b>${n.protein}g</b><span>${L("단백질","protein")}</span></div><div><b>${n.carbs}g</b><span>${L("탄수화물","carbs")}</span></div><div><b>${n.sugar}g</b><span>${L("당","sugar")}</span></div>`;
-  const inf=info(m),about=inf?`<div class="panel about"><h4>${L("메뉴 소개","About this dish")}${inf.hot?` <span class="hot" aria-label="${L("매운 정도","Spicy")} ${inf.hot}/3">${"●".repeat(inf.hot)}<small>${L(["","조금 매워요","매워요","아주 매워요"][inf.hot],["","a little spicy","spicy","very spicy"][inf.hot])}</small></span>`:` <small>${L("맵지 않아요","not spicy")}</small>`}</h4><p>${esc(L(inf.ko,inf.d))}</p>${inf.has.length?`<div class="has"><span class="hint">${L("보통 들어가는 재료","Usually contains")}</span>${inf.has.map(h=>`<span class="pill">${L(...HAS[h])}</span>`).join("")}</div>`:""}<span class="hint">${L("일반적인 조리법 기준이에요. 알레르기나 종교상 가리는 음식이 있으면 직원에게 꼭 확인하세요.","Based on typical recipes. If you have allergies or dietary restrictions (e.g. halal, vegetarian), please check with the staff.")}</span></div>`:"";
+  const inf=info(m),about=inf?`<div class="panel about"><h4>${L("메뉴 소개","About this dish")}${inf.hot?` <span class="hot" aria-label="${L("매운 정도","Spicy")} ${inf.hot}/3">${"●".repeat(inf.hot)}<small>${L(["","조금 매워요","매워요","아주 매워요"][inf.hot],["","a little spicy","spicy","very spicy"][inf.hot])}</small></span>`:` <small>${L("맵지 않아요","not spicy")}</small>`}</h4><p>${esc(mdesc(m))}</p>${inf.has.length?`<div class="has"><span class="hint">${L("보통 들어가는 재료","Usually contains")}</span>${inf.has.map(h=>`<span class="pill">${L(...HAS[h])}</span>`).join("")}</div>`:""}<span class="hint">${L("일반적인 조리법 기준이에요. 알레르기나 종교상 가리는 음식이 있으면 직원에게 꼭 확인하세요.","Based on typical recipes. If you have allergies or dietary restrictions (e.g. halal, vegetarian), please check with the staff.")}</span></div>`:"";
   const mineR=st.mine[m.id];
   const rvs=[...(mineR?[{s:mineR.s,t:mineR.t,f:mineR.f,who:"나",at:mineR.at,v:mineR.verified}]:[]),...(SEED_RV[m.id]||[]).map(x=>({...x,at:Date.now()-x.d*DAY}))];
   $("#detail-body").innerHTML=`<div class="${so?"sold":""}" style="display:flex;flex-direction:column;gap:16px">

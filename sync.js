@@ -45,6 +45,7 @@ async function callVerify(kind, file, m) {
     if (res === "timeout") { hy(5000); return { ok: false, reason: L("확인이 오래 걸리고 있어요. 잠시 뒤 새로고침하면 결과가 반영돼요","The check is taking a while. Refresh shortly to see the result") } }
     const { data, error } = res;
     hy(800);
+    if (data && data.reason) data.reason = tx(data.reason);   // 서버의 고정 안내(영어)를 중국어·베트남어·일본어로
     return error || !data ? { ok: false, reason: L("서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요","Couldn't reach the server. Please try again shortly") } : data;
   } catch (e) { return { ok: false, reason: L("사진을 읽지 못했어요. 다른 사진을 골라 주세요","Couldn't read the photo. Please pick another one") } }
 }

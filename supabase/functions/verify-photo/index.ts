@@ -69,8 +69,11 @@ Deno.serve(async (req) => {
   const url = Deno.env.get("SUPABASE_URL")!;
   const authed = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } } });
   const { kind, menuId, menuName, cat, n, image, lang } = await req.json().catch(() => ({}));
-  // 화면 언어가 영어면 안내 문구와 AI 판정 이유를 영어로 돌려줌 (DB에 남는 품절 이유는 한국어 그대로)
-  const en = lang === "en", T = (ko: string, e: string) => (en ? e : ko);
+  // 화면 언어가 한국어가 아니면 고정 안내는 영어로 돌려줌 (화면에서 중국어·베트남어·일본어로 바꿈)
+  // AI 판정 이유는 그 언어로 직접 받음. DB에 남는 품절 이유는 한국어 그대로
+  const OTHER: Record<string, string> = { en: "English", zh: "Simplified Chinese", vi: "Vietnamese", ja: "Japanese" };
+  const en = typeof lang === "string" && lang in OTHER, T = (ko: string, e: string) => (en ? e : ko);
+  const extraKey = en ? `,"reason_tr":"same sentence in ${OTHER[lang]}"` : "";
   const { data: { user } } = await authed.auth.getUser();
   if (!user) return J({ ok: false, reason: T("로그인 정보가 없어요. 새로고침해 주세요", "You're not signed in. Please refresh the page") });
   const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -94,10 +97,10 @@ Deno.serve(async (req) => {
     return J({ ok: false, limited: true, reason: T(`오늘 ${LABEL[kind as "food" | "sold"]} ${LIMIT[kind as "food" | "sold"]}번까지예요. 내일 다시 해 주세요`, `You can do ${LIMIT[kind as "food" | "sold"]} ${LABEL_EN[kind as "food" | "sold"]} a day. Please try again tomorrow`) });
 
   const prompt = kind === "food"
-    ? `학식 메뉴 사진 검증 작업이야. 메뉴 이름: "${name}" (분류: ${cat}). 1) 사진이 이 메뉴의 실제 음식 사진인지 판단해. 음식이 아니거나, 누가 봐도 다른 메뉴거나, 부적절한 사진이면 match=false. 같은 계열의 음식이면 match=true. 2) match=true면 사진에 보이는 1인분 양을 기준으로 영양성분을 추정해. 메뉴 이름 기준 기본 추정치는 ${num(n?.kcal)}kcal, 단백질 ${num(n?.protein)}g, 탄수화물 ${num(n?.carbs)}g, 당 ${num(n?.sugar)}g 이야. JSON만 답해: {"match":true,"reason":"한국어 한 문장","reason_en":"same sentence in English","portion":"적음|보통|많음","nutrition":{"kcal":0,"protein":0,"carbs":0,"sugar":0}}`
-    : `학식 품절 제보 검증 작업이야. 사진이 식당 키오스크나 메뉴판이고, 그 안에 "${name}" 메뉴가 품절로 표시되어 있는지 판단해. 메뉴 이름과 품절 표시가 함께 보이면 ok=true, 다른 메뉴만 품절이거나 판단할 수 없으면 ok=false. JSON만 답해: {"ok":true,"reason":"한국어 한 문장","reason_en":"same sentence in English"}`;
+    ? `학식 메뉴 사진 검증 작업이야. 메뉴 이름: "${name}" (분류: ${cat}). 1) 사진이 이 메뉴의 실제 음식 사진인지 판단해. 음식이 아니거나, 누가 봐도 다른 메뉴거나, 부적절한 사진이면 match=false. 같은 계열의 음식이면 match=true. 2) match=true면 사진에 보이는 1인분 양을 기준으로 영양성분을 추정해. 메뉴 이름 기준 기본 추정치는 ${num(n?.kcal)}kcal, 단백질 ${num(n?.protein)}g, 탄수화물 ${num(n?.carbs)}g, 당 ${num(n?.sugar)}g 이야. JSON만 답해: {"match":true,"reason":"한국어 한 문장","reason_en":"same sentence in English"${extraKey},"portion":"적음|보통|많음","nutrition":{"kcal":0,"protein":0,"carbs":0,"sugar":0}}`
+    : `학식 품절 제보 검증 작업이야. 사진이 식당 키오스크나 메뉴판이고, 그 안에 "${name}" 메뉴가 품절로 표시되어 있는지 판단해. 메뉴 이름과 품절 표시가 함께 보이면 ok=true, 다른 메뉴만 품절이거나 판단할 수 없으면 ok=false. JSON만 답해: {"ok":true,"reason":"한국어 한 문장","reason_en":"same sentence in English"${extraKey}}`;
   const ai = await ask(prompt, b64);
-  const why = (fallback: string) => (en ? ai?.reason_en || ai?.reason : ai?.reason) || fallback;
+  const why = (fallback: string) => (en ? ai?.reason_tr || ai?.reason_en || ai?.reason : ai?.reason) || fallback;
 
   if (kind === "sold" && !ai) return J({ ok: false, reason: T("지금은 AI 확인이 어려워 품절 제보를 받을 수 없어요", "AI check is unavailable right now, so sold-out reports can't be accepted") });
   if (kind === "sold" && ai.ok !== true) return J({ ok: false, reason: why(T("키오스크에서 이 메뉴의 품절 표시가 보이게 찍어 주세요", "Take a photo of the kiosk showing this menu as sold out")) });
